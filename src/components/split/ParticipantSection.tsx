@@ -102,7 +102,7 @@ export function ParticipantSection() {
       <CardContent className="space-y-6">
         <form className="grid gap-3 sm:grid-cols-[1fr_auto]" onSubmit={handleAddParticipant}>
           <div className="space-y-2">
-            <Label htmlFor="participant-name">Add participant</Label>
+            <Label htmlFor="participant-name">Add participant name</Label>
             <Input
               id="participant-name"
               value={newParticipantName}
@@ -110,7 +110,6 @@ export function ParticipantSection() {
                 setNewParticipantName(event.target.value);
                 setError(null);
               }}
-              placeholder="Taylor"
             />
           </div>
           <Button className="self-end" type="submit">
