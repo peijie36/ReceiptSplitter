@@ -62,26 +62,40 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
     setState(buildFormState(item));
   }, [item]);
 
-  function handleSave() {
-    const parsed = parseMoneyInput(state.amount);
+  function commitChanges(nextState: ItemFormState = state) {
+    const parsed = parseMoneyInput(nextState.amount);
 
     if (parsed.cents === null) {
       setError(parsed.error ?? "Enter a valid item amount.");
-      return;
+      return false;
     }
 
     const result = updateItem(item.id, {
-      name: state.name,
+      name: nextState.name,
       amountCents: parsed.cents,
-      participantIds: state.participantIds,
+      participantIds: nextState.participantIds,
     });
 
     if (!result.ok) {
       setError(result.error ?? "Unable to update item.");
-      return;
+      return false;
     }
 
     setError(null);
+    return true;
+  }
+
+  function handleSave() {
+    commitChanges();
+  }
+
+  function handleCommitOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.blur();
   }
 
   return (
@@ -92,7 +106,14 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
           <Input
             id={`item-name-${item.id}`}
             value={state.name}
-            onChange={(event) => setState((current) => ({ ...current, name: event.target.value }))}
+            onChange={(event) => {
+              setState((current) => ({ ...current, name: event.target.value }));
+              setError(null);
+            }}
+            onBlur={() => {
+              commitChanges();
+            }}
+            onKeyDown={handleCommitOnEnter}
           />
         </div>
         <div className="space-y-2">
@@ -101,7 +122,14 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
             id={`item-amount-${item.id}`}
             value={state.amount}
             placeholder="0.00"
-            onValueChange={({ displayValue }) => setState((current) => ({ ...current, amount: displayValue }))}
+            onValueChange={({ displayValue }) => {
+              setState((current) => ({ ...current, amount: displayValue }));
+              setError(null);
+            }}
+            onBlur={() => {
+              commitChanges();
+            }}
+            onKeyDown={handleCommitOnEnter}
           />
         </div>
         <div className="space-y-2">
@@ -114,7 +142,13 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
                   onCheckedChange={() => {
                     const { nextState, error: toggleError } = toggleParticipantSelection(state, participant.id);
                     setState(nextState);
-                    setError(toggleError ?? null);
+
+                    if (toggleError) {
+                      setError(toggleError);
+                      return;
+                    }
+
+                    commitChanges(nextState);
                   }}
                 />
                 <span>{participant.name}</span>
@@ -171,6 +205,7 @@ export function ItemSection() {
       ...current,
       participantIds,
     }));
+    setError(null);
   }
 
   function handleAddItem(event: React.FormEvent<HTMLFormElement>) {
@@ -268,7 +303,10 @@ export function ItemSection() {
                 <Input
                   id="new-item-name"
                   value={newItem.name}
-                  onChange={(event) => setNewItem((current) => ({ ...current, name: event.target.value }))}
+                  onChange={(event) => {
+                    setNewItem((current) => ({ ...current, name: event.target.value }));
+                    setError(null);
+                  }}
                   placeholder="Burrito bowl"
                 />
               </div>
@@ -277,7 +315,10 @@ export function ItemSection() {
                 <MoneyInput
                   id="new-item-amount"
                   value={newItem.amount}
-                  onValueChange={({ displayValue }) => setNewItem((current) => ({ ...current, amount: displayValue }))}
+                  onValueChange={({ displayValue }) => {
+                    setNewItem((current) => ({ ...current, amount: displayValue }));
+                    setError(null);
+                  }}
                   placeholder="0.00"
                 />
               </div>
