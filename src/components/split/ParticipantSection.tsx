@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAppStore } from "@/store/useAppStore";
+import { normalizeName } from "@/utils/draftValidation";
 
 export function ParticipantSection() {
   const draft = useAppStore((state) => state.draft);
@@ -42,14 +43,31 @@ export function ParticipantSection() {
     setError(null);
   }
 
-  function handleUpdateParticipant(participantId: string) {
-    const result = updateParticipantName(participantId, participantDrafts[participantId] ?? "");
+  function updateParticipantDraft(participantId: string, name: string) {
+    setParticipantDrafts((current) => ({
+      ...current,
+      [participantId]: name,
+    }));
+  }
+
+  function handleParticipantBlur(participantId: string, currentName: string) {
+    const nextName = participantDrafts[participantId] ?? "";
+    const normalizedNextName = normalizeName(nextName);
+
+    if (normalizedNextName === currentName) {
+      updateParticipantDraft(participantId, currentName);
+      setError(null);
+      return;
+    }
+
+    const result = updateParticipantName(participantId, nextName);
 
     if (!result.ok) {
       setError(result.error ?? "Unable to update participant.");
       return;
     }
 
+    updateParticipantDraft(participantId, normalizedNextName);
     setError(null);
   }
 
@@ -88,7 +106,10 @@ export function ParticipantSection() {
             <Input
               id="participant-name"
               value={newParticipantName}
-              onChange={(event) => setNewParticipantName(event.target.value)}
+              onChange={(event) => {
+                setNewParticipantName(event.target.value);
+                setError(null);
+              }}
               placeholder="Taylor"
             />
           </div>
@@ -122,12 +143,19 @@ export function ParticipantSection() {
                     <Input
                       id={`participant-${participant.id}`}
                       value={participantDrafts[participant.id] ?? ""}
-                      onChange={(event) =>
-                        setParticipantDrafts((current) => ({
-                          ...current,
-                          [participant.id]: event.target.value,
-                        }))
-                      }
+                      onChange={(event) => {
+                        updateParticipantDraft(participant.id, event.target.value);
+                        setError(null);
+                      }}
+                      onBlur={() => handleParticipantBlur(participant.id, participant.name)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter") {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        event.currentTarget.blur();
+                      }}
                     />
                   </div>
                   <div className="flex items-end">
@@ -137,9 +165,6 @@ export function ParticipantSection() {
                     </label>
                   </div>
                   <div className="flex items-end justify-end gap-2">
-                    <Button type="button" variant="secondary" onClick={() => handleUpdateParticipant(participant.id)}>
-                      Update
-                    </Button>
                     <Button type="button" variant="ghost" onClick={() => handleRemoveParticipant(participant.id)}>
                       <Trash2 className="h-4 w-4" />
                       Remove
