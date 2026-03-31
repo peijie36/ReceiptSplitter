@@ -157,23 +157,31 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
             <Separator />
 
             <div className="space-y-3">
-              {totals.participantTotals.map((participant) => (
-                <div key={participant.participantId} className="rounded-xl border border-border/80 bg-background/70 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="font-medium">
-                        {participant.participantName}
-                        {participant.isPayer ? " (payer)" : ""}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Subtotal {formatCurrency(participant.subtotalCents)} | Tax {formatCurrency(participant.taxCents)} | Tip{" "}
-                        {formatCurrency(participant.tipCents)}
+              <div>
+                <h3 className="font-medium">Per-person totals</h3>
+                <p className="text-sm text-muted-foreground">Includes subtotal, tax, and tip for every participant.</p>
+              </div>
+              <ScrollArea className="max-h-[320px]">
+                <div className="space-y-3 pr-3">
+                  {totals.participantTotals.map((participant) => (
+                    <div key={participant.participantId} className="rounded-xl border border-border/80 bg-background/70 p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="font-medium">
+                            {participant.participantName}
+                            {participant.isPayer ? " (payer)" : ""}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Subtotal {formatCurrency(participant.subtotalCents)} | Tax {formatCurrency(participant.taxCents)} | Tip{" "}
+                            {formatCurrency(participant.tipCents)}
+                          </div>
+                        </div>
+                        <div className="text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
                       </div>
                     </div>
-                    <div className="text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </ScrollArea>
             </div>
 
             <Separator />

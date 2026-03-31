@@ -2,7 +2,6 @@ import { Receipt, Wallet } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "@/store/useAppStore";
 import { getDraftValidationErrors } from "@/utils/draftValidation";
@@ -68,27 +67,25 @@ export function SummarySection() {
             <h3 className="font-medium">Per-person totals</h3>
             <p className="text-sm text-muted-foreground">Includes subtotal, tax, and tip for every participant.</p>
           </div>
-          <ScrollArea className="max-h-[320px]">
-            <div className="space-y-3 pr-3">
-              {totals.participantTotals.map((participant) => (
-                <div key={participant.participantId} className="rounded-xl border border-border/80 bg-background/70 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-medium">
-                        {participant.participantName}
-                        {participant.isPayer ? " (payer)" : ""}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Subtotal {formatCurrency(participant.subtotalCents)} | Tax {formatCurrency(participant.taxCents)} | Tip{" "}
-                        {formatCurrency(participant.tipCents)}
-                      </div>
+          <div className="max-h-[320px] space-y-3 overflow-y-auto pr-3">
+            {totals.participantTotals.map((participant) => (
+              <div key={participant.participantId} className="rounded-xl border border-border/80 bg-background/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-medium">
+                      {participant.participantName}
+                      {participant.isPayer ? " (payer)" : ""}
                     </div>
-                    <div className="text-right text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
+                    <div className="text-sm text-muted-foreground">
+                      Subtotal {formatCurrency(participant.subtotalCents)} | Tax {formatCurrency(participant.taxCents)} | Tip{" "}
+                      {formatCurrency(participant.tipCents)}
+                    </div>
                   </div>
+                  <div className="text-right text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
+              </div>
+            ))}
+          </div>
         </div>
 
         <Separator />
