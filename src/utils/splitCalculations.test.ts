@@ -63,6 +63,21 @@ describe("calculateFinalTotals", () => {
     expect(result.grandTotalCents).toBe(2150);
   });
 
+  it("rotates remainder cents across repeated shared items for the same participant group", () => {
+    const split = buildSplit({
+      items: [
+        { id: "item-1", name: "Mint", amountCents: 1, participantIds: ["payer", "blair", "casey"] },
+        { id: "item-2", name: "Sauce", amountCents: 1, participantIds: ["payer", "blair", "casey"] },
+        { id: "item-3", name: "Spice", amountCents: 1, participantIds: ["payer", "blair", "casey"] },
+      ],
+    });
+
+    const result = calculateFinalTotals(split);
+
+    expect(result.participantTotals.map((entry) => entry.subtotalCents)).toEqual([1, 1, 1]);
+    expect(result.participantTotals.map((entry) => entry.totalCents)).toEqual([1, 1, 1]);
+  });
+
   it("keeps the payer in calculations when they are assigned some items", () => {
     const split = buildSplit({
       items: [{ id: "item-1", name: "Pasta", amountCents: 1800, participantIds: ["payer", "blair", "casey"] }],
@@ -217,7 +232,22 @@ describe("calculateFinalTotals", () => {
     const result = calculateFinalTotals(split);
 
     expect(result.participantTotals.map((entry) => entry.subtotalCents)).toEqual([334, 333, 333]);
-    expect(result.participantTotals.map((entry) => entry.taxCents)).toEqual([2, 2, 1]);
+    expect(result.participantTotals.map((entry) => entry.taxCents)).toEqual([1, 2, 2]);
+    expect(result.participantTotals.map((entry) => entry.totalCents)).toEqual([335, 335, 335]);
     expect(result.grandTotalCents).toBe(1005);
+  });
+
+  it("keeps equal tax and tip allocations balanced when multiple equal splits happen in sequence", () => {
+    const split = buildSplit({
+      items: [{ id: "item-1", name: "Shared plate", amountCents: 1000, participantIds: ["payer", "blair", "casey"] }],
+      taxCents: 5,
+      tipCents: 4,
+      taxAllocationMode: "equal",
+      tipAllocationMode: "equal",
+    });
+
+    const result = calculateFinalTotals(split);
+
+    expect(result.participantTotals.map((entry) => entry.totalCents)).toEqual([337, 336, 336]);
   });
 });
