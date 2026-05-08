@@ -21,7 +21,7 @@ const MoneyInput = React.forwardRef<HTMLInputElement, MoneyInputProps>(
       <Input
         ref={ref}
         type="text"
-        inputMode="numeric"
+        inputMode="decimal"
         value={value}
         onChange={(event) => onValueChange(normalizeMoneyInput(event.target.value, { emptyWhenZero }))}
         {...props}

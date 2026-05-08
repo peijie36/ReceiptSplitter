@@ -66,4 +66,48 @@ describe("ItemSection", () => {
 
     expect(useAppStore.getState().draft.items[0]?.name).toBe("Burger");
   });
+
+  it("adds an item assigned to a participant subset through chips", async () => {
+    const user = userEvent.setup();
+    const store = useAppStore.getState();
+
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+    store.addParticipant("Casey");
+
+    render(<ItemSection />);
+
+    await user.type(screen.getByLabelText("Item name"), "Nachos");
+    await user.type(screen.getByLabelText("Amount"), "12.50");
+    await user.click(screen.getByRole("button", { name: "Assign Alex" }));
+    await user.click(screen.getByRole("button", { name: "Assign Casey" }));
+    await user.click(screen.getByRole("button", { name: /add item/i }));
+
+    const item = useAppStore.getState().draft.items[0];
+    const participantIds = useAppStore.getState().draft.participants.map((participant) => participant.id);
+
+    expect(item?.name).toBe("Nachos");
+    expect(item?.amountCents).toBe(1250);
+    expect(item?.participantIds).toEqual([participantIds[0], participantIds[2]]);
+  });
+
+  it("supports assign all and clear controls for the draft item", async () => {
+    const user = userEvent.setup();
+    const store = useAppStore.getState();
+
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+
+    render(<ItemSection />);
+
+    await user.click(screen.getByRole("button", { name: "Assign all participants" }));
+
+    expect(screen.getByRole("button", { name: "Remove Alex" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "Remove Blair" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(screen.getByRole("button", { name: "Clear participant assignments" }));
+
+    expect(screen.getByRole("button", { name: "Assign Alex" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Assign Blair" })).toHaveAttribute("aria-pressed", "false");
+  });
 });

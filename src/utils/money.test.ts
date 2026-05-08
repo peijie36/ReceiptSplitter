@@ -8,41 +8,59 @@ describe("money input helpers", () => {
     expect(formatMoneyInput(0, { emptyWhenZero: true })).toBe("");
   });
 
-  it("treats typed digits as cents while preserving an empty field", () => {
+  it("treats typed numbers as dollar amounts while preserving an empty field", () => {
     expect(normalizeMoneyInput("", { emptyWhenZero: true })).toEqual({
       displayValue: "",
       cents: 0,
     });
 
     expect(normalizeMoneyInput("1", { emptyWhenZero: true })).toEqual({
-      displayValue: "0.01",
-      cents: 1,
+      displayValue: "1",
+      cents: 100,
     });
 
     expect(normalizeMoneyInput("1234", { emptyWhenZero: true })).toEqual({
-      displayValue: "12.34",
-      cents: 1234,
+      displayValue: "1234",
+      cents: 123400,
     });
   });
 
-  it("keeps formatted values stable when editing or deleting digits", () => {
+  it("keeps natural decimal values stable while editing", () => {
     expect(normalizeMoneyInput("1.23", { emptyWhenZero: true })).toEqual({
       displayValue: "1.23",
       cents: 123,
     });
 
     expect(normalizeMoneyInput("1.2", { emptyWhenZero: true })).toEqual({
-      displayValue: "0.12",
-      cents: 12,
+      displayValue: "1.2",
+      cents: 120,
+    });
+
+    expect(normalizeMoneyInput("12.", { emptyWhenZero: true })).toEqual({
+      displayValue: "12.",
+      cents: 1200,
     });
   });
 
-  it("parses fully formatted amounts by extracting digits into cents", () => {
+  it("parses plain, decimal, and fully formatted dollar amounts into cents", () => {
+    expect(parseMoneyInput("12")).toEqual({ cents: 1200 });
+    expect(parseMoneyInput("12.5")).toEqual({ cents: 1250 });
     expect(parseMoneyInput("12.50")).toEqual({ cents: 1250 });
     expect(parseMoneyInput("$12.50")).toEqual({ cents: 1250 });
+    expect(parseMoneyInput("1,234.56")).toEqual({ cents: 123456 });
   });
 
-  it("rejects negative and oversized values", () => {
+  it("rejects invalid, over-precise, negative, and oversized values", () => {
+    expect(parseMoneyInput("12.345")).toEqual({
+      cents: null,
+      error: "Use at most two decimal places.",
+    });
+
+    expect(parseMoneyInput("abc")).toEqual({
+      cents: null,
+      error: "Enter only numbers and a decimal point.",
+    });
+
     expect(parseMoneyInput("-12.50")).toEqual({
       cents: null,
       error: "Amount cannot be negative.",

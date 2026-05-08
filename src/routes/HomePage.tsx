@@ -80,6 +80,7 @@ export function HomePage() {
               <div className="text-sm text-muted-foreground">Title</div>
               <div className="mt-1 font-medium">{draft.title.trim() || "Untitled draft"}</div>
             </div>
+            <div className="text-xs text-muted-foreground">Autosaved {formatSavedDate(draft.updatedAt)}</div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-secondary/50 p-4">
                 <div className="text-sm text-muted-foreground">Participants</div>
@@ -101,7 +102,7 @@ export function HomePage() {
         <div className="mb-4 flex items-center gap-3">
           <History className="h-5 w-5 text-muted-foreground" />
           <div>
-            <h2 className="text-xl font-semibold">Saved splits</h2>
+            <h2 className="text-xl font-semibold">Recent saved splits</h2>
             <p className="text-sm text-muted-foreground">Immutable snapshots sorted most recent first.</p>
           </div>
         </div>

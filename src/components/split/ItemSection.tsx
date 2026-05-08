@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
+import { ParticipantAssignmentChips } from "@/components/split/ParticipantAssignmentChips";
 import { useAppStore } from "@/store/useAppStore";
 import type { Item, Participant } from "@/types/split";
 import { formatCurrency, formatMoneyInput, normalizeMoneyInput, parseMoneyInput } from "@/utils/money";
@@ -17,26 +17,6 @@ type ItemFormState = {
   amount: string;
   participantIds: string[];
 };
-
-function toggleParticipantSelection(state: ItemFormState, participantId: string) {
-  const isSelected = state.participantIds.includes(participantId);
-
-  if (isSelected && state.participantIds.length === 1) {
-    return {
-      nextState: state,
-      error: "Every item must stay assigned to at least one participant.",
-    };
-  }
-
-  return {
-    nextState: {
-      ...state,
-      participantIds: isSelected
-        ? state.participantIds.filter((assignedId) => assignedId !== participantId)
-        : [...state.participantIds, participantId],
-    },
-  };
-}
 
 function buildFormState(item?: Item): ItemFormState {
   return {
@@ -48,10 +28,11 @@ function buildFormState(item?: Item): ItemFormState {
 
 type ExistingItemEditorProps = {
   item: Item;
+  itemNumber: number;
   participants: Participant[];
 };
 
-function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
+function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEditorProps) {
   const updateItem = useAppStore((state) => state.updateItem);
   const removeItem = useAppStore((state) => state.removeItem);
 
@@ -85,8 +66,20 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
     return true;
   }
 
-  function handleSave() {
-    commitChanges();
+  function handleAssignmentChange(participantIds: string[]) {
+    const nextState = {
+      ...state,
+      participantIds,
+    };
+
+    setState(nextState);
+
+    if (participantIds.length === 0) {
+      setError("Assign this item to at least one participant before updating.");
+      return;
+    }
+
+    commitChanges(nextState);
   }
 
   function handleCommitOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -98,12 +91,25 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
     event.currentTarget.blur();
   }
 
+  const headerName = state.name.trim() || "Untitled item";
+  const headerAmount = parseMoneyInput(state.amount).cents;
+
   return (
-    <div className="rounded-xl border border-border/80 bg-background/70 p-4">
-      <div className="grid gap-3 lg:grid-cols-[1.2fr_180px_1fr_auto]">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-border/80 bg-background/70">
+      <div className="flex min-w-0 items-end justify-between gap-3 border-b border-border/70 bg-secondary/30 px-3 py-2">
+        <div className="min-w-0">
+          <div className="text-xs font-medium uppercase text-muted-foreground">Item {itemNumber}</div>
+          <div className="truncate font-medium">{headerName}</div>
+        </div>
+        <div className="shrink-0 font-semibold tabular-nums">
+          {headerAmount === null ? formatCurrency(item.amountCents) : formatCurrency(headerAmount)}
+        </div>
+      </div>
+      <div className="grid min-w-0 gap-2 p-3 md:grid-cols-[minmax(0,1fr)_9rem]">
         <div className="space-y-2">
           <Label htmlFor={`item-name-${item.id}`}>Item</Label>
           <Input
+            className="h-9"
             id={`item-name-${item.id}`}
             value={state.name}
             onChange={(event) => {
@@ -119,6 +125,7 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
         <div className="space-y-2">
           <Label htmlFor={`item-amount-${item.id}`}>Amount</Label>
           <MoneyInput
+            className="h-9"
             id={`item-amount-${item.id}`}
             value={state.amount}
             placeholder="0.00"
@@ -132,44 +139,25 @@ function ExistingItemEditor({ item, participants }: ExistingItemEditorProps) {
             onKeyDown={handleCommitOnEnter}
           />
         </div>
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label>Assigned to</Label>
-          <div className="grid gap-2 rounded-lg border border-border bg-card p-3">
-            {participants.map((participant) => (
-              <label key={participant.id} className="inline-flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={state.participantIds.includes(participant.id)}
-                  onCheckedChange={() => {
-                    const { nextState, error: toggleError } = toggleParticipantSelection(state, participant.id);
-                    setState(nextState);
-
-                    if (toggleError) {
-                      setError(toggleError);
-                      return;
-                    }
-
-                    commitChanges(nextState);
-                  }}
-                />
-                <span>{participant.name}</span>
-              </label>
-            ))}
+          <div className="rounded-md border border-border bg-card p-2.5">
+            <ParticipantAssignmentChips
+              participants={participants}
+              selectedParticipantIds={state.participantIds}
+              onSelectedParticipantIdsChange={handleAssignmentChange}
+            />
           </div>
         </div>
-        <div className="flex items-end justify-end gap-2">
-          <Button type="button" variant="secondary" onClick={handleSave}>
-            <Pencil className="h-4 w-4" />
-            Update
-          </Button>
-          <Button type="button" variant="ghost" onClick={() => removeItem(item.id)}>
+        <div className="flex items-end justify-end">
+          <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(item.id)} className="w-full">
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
         </div>
       </div>
-      <div className="mt-3 text-sm text-muted-foreground">Current amount: {formatCurrency(item.amountCents)}</div>
       {error ? (
-        <Alert className="mt-3" variant="destructive">
+        <Alert className="mx-3 mb-3" variant="destructive">
           <AlertTitle>Item issue</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -189,18 +177,18 @@ export function ItemSection() {
     participantIds: [],
   });
   const [billSubtotalInput, setBillSubtotalInput] = useState(formatMoneyInput(draft.billSubtotalCents, { emptyWhenZero: true }));
+  const [isBillSubtotalFocused, setIsBillSubtotalFocused] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (isBillSubtotalFocused) {
+      return;
+    }
+
     setBillSubtotalInput(formatMoneyInput(draft.billSubtotalCents, { emptyWhenZero: true }));
-  }, [draft.billSubtotalCents]);
+  }, [draft.billSubtotalCents, isBillSubtotalFocused]);
 
-  function handleParticipantToggle(participantId: string) {
-    const isSelected = newItem.participantIds.includes(participantId);
-    const participantIds = isSelected
-      ? newItem.participantIds.filter((assignedId) => assignedId !== participantId)
-      : [...newItem.participantIds, participantId];
-
+  function handleParticipantAssignmentChange(participantIds: string[]) {
     setNewItem((current) => ({
       ...current,
       participantIds,
@@ -257,7 +245,7 @@ export function ItemSection() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
         <CardTitle>{draft.splitMode === "equal" ? "Bill subtotal" : "Items"}</CardTitle>
         <CardDescription>
           {draft.splitMode === "equal"
@@ -265,16 +253,22 @@ export function ItemSection() {
             : "Enter each line item and choose who shares it."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
         {draft.splitMode === "equal" ? (
-          <div className="space-y-4 rounded-xl border border-dashed border-border p-4">
+          <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
             <div className="space-y-2">
               <Label htmlFor="bill-subtotal">Subtotal before tax and tip</Label>
               <MoneyInput
+                className="h-9"
                 id="bill-subtotal"
                 placeholder="0.00"
                 value={billSubtotalInput}
                 onValueChange={({ displayValue }) => handleBillSubtotalChange(displayValue)}
+                onFocus={() => setIsBillSubtotalFocused(true)}
+                onBlur={() => {
+                  setIsBillSubtotalFocused(false);
+                  setBillSubtotalInput(formatMoneyInput(draft.billSubtotalCents, { emptyWhenZero: true }));
+                }}
               />
             </div>
             <div className="text-sm text-muted-foreground">
@@ -296,11 +290,12 @@ export function ItemSection() {
             <AlertDescription>You need participants before you can assign bill items.</AlertDescription>
           </Alert>
         ) : (
-          <form className="space-y-4 rounded-xl border border-dashed border-border p-4" onSubmit={handleAddItem}>
+          <form className="space-y-3 rounded-lg border border-dashed border-border p-3" onSubmit={handleAddItem}>
             <div className="grid gap-3 md:grid-cols-[1.2fr_180px]">
               <div className="space-y-2">
                 <Label htmlFor="new-item-name">Item name</Label>
                 <Input
+                  className="h-9"
                   id="new-item-name"
                   value={newItem.name}
                   onChange={(event) => {
@@ -313,6 +308,7 @@ export function ItemSection() {
               <div className="space-y-2">
                 <Label htmlFor="new-item-amount">Amount</Label>
                 <MoneyInput
+                  className="h-9"
                   id="new-item-amount"
                   value={newItem.amount}
                   onValueChange={({ displayValue }) => {
@@ -326,20 +322,16 @@ export function ItemSection() {
 
             <div className="space-y-2">
               <Label>Assign to</Label>
-              <div className="grid gap-2 rounded-lg border border-border bg-card p-3 sm:grid-cols-2">
-                {draft.participants.map((participant) => (
-                  <label key={participant.id} className="inline-flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={newItem.participantIds.includes(participant.id)}
-                      onCheckedChange={() => handleParticipantToggle(participant.id)}
-                    />
-                    <span>{participant.name}</span>
-                  </label>
-                ))}
+              <div className="rounded-md border border-border bg-card p-2.5">
+                <ParticipantAssignmentChips
+                  participants={draft.participants}
+                  selectedParticipantIds={newItem.participantIds}
+                  onSelectedParticipantIdsChange={handleParticipantAssignmentChange}
+                />
               </div>
             </div>
 
-            <Button type="submit">
+            <Button type="submit" size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               Add item
             </Button>
@@ -354,13 +346,22 @@ export function ItemSection() {
         ) : null}
 
         {draft.splitMode === "equal" ? null : draft.items.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-secondary/40 p-5 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
             No items yet. Add each bill item and assign it to one or more participants.
           </div>
         ) : (
-          <div className="space-y-3">
-            {draft.items.map((item) => (
-              <ExistingItemEditor key={item.id} item={item} participants={draft.participants} />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-medium">Saved items</h3>
+              <span className="text-xs text-muted-foreground">{draft.items.length} total</span>
+            </div>
+            {draft.items.map((item, index) => (
+              <ExistingItemEditor
+                key={item.id}
+                item={item}
+                itemNumber={index + 1}
+                participants={draft.participants}
+              />
             ))}
           </div>
         )}

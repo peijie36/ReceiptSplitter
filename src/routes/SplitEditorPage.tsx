@@ -18,10 +18,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ChargeSection } from "@/components/split/ChargeSection";
 import { ItemSection } from "@/components/split/ItemSection";
 import { ParticipantSection } from "@/components/split/ParticipantSection";
-import { SummarySection } from "@/components/split/SummarySection";
+import { MobileSummaryDock, SummarySection } from "@/components/split/SummarySection";
 import { useAppStore } from "@/store/useAppStore";
 import type { SplitMode } from "@/types/split";
 import { getDraftValidationErrors } from "@/utils/draftValidation";
+
+function formatDraftSavedAt(isoDate: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(isoDate));
+}
 
 export function SplitEditorPage() {
   const navigate = useNavigate();
@@ -33,6 +40,8 @@ export function SplitEditorPage() {
 
   const validationErrors = getDraftValidationErrors(draft);
   const canSave = validationErrors.length === 0;
+  const validationIssueLabel =
+    validationErrors.length === 1 ? "1 issue to fix before saving" : `${validationErrors.length} issues to fix before saving`;
 
   function handleSave() {
     const result = saveDraft();
@@ -43,11 +52,12 @@ export function SplitEditorPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-card/80 p-6 shadow-calm lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-4 pb-24 sm:space-y-5 xl:pb-0">
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card/80 p-4 shadow-calm sm:rounded-2xl sm:p-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="w-full max-w-2xl space-y-2">
           <Label htmlFor="split-title">Split title</Label>
           <Input
+            className="h-9"
             id="split-title"
             value={draft.title}
             onChange={(event) => setDraftTitle(event.target.value)}
@@ -59,11 +69,11 @@ export function SplitEditorPage() {
           <div className="space-y-2 pt-2">
             <Label>Split mode</Label>
             <RadioGroup
-              className="grid gap-3 md:grid-cols-2"
+              className="grid gap-2 md:grid-cols-2"
               value={draft.splitMode}
               onValueChange={(value) => setSplitMode(value as SplitMode)}
             >
-              <label className="flex items-start gap-3 rounded-xl border border-border bg-background/70 p-4">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-3">
                 <RadioGroupItem className="mt-1" value="itemized" id="split-mode-itemized" />
                 <span className="space-y-1">
                   <span className="block font-medium">Itemized split</span>
@@ -72,7 +82,7 @@ export function SplitEditorPage() {
                   </span>
                 </span>
               </label>
-              <label className="flex items-start gap-3 rounded-xl border border-border bg-background/70 p-4">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-3">
                 <RadioGroupItem className="mt-1" value="equal" id="split-mode-equal" />
                 <span className="space-y-1">
                   <span className="block font-medium">Split whole bill equally</span>
@@ -84,47 +94,54 @@ export function SplitEditorPage() {
             </RadioGroup>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button type="button" variant="outline">
-                Reset draft
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset the current draft?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This clears the unsaved working draft. Saved snapshots will stay in history.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    resetDraft();
-                    void navigate({ to: "/" });
-                  }}
-                >
+        <div className="space-y-2 lg:text-right">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start lg:justify-end">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto">
                   Reset draft
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <Button type="button" onClick={handleSave} disabled={!canSave}>
-            Save split
-          </Button>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset the current draft?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This clears the unsaved working draft. Saved snapshots will stay in history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      resetDraft();
+                      void navigate({ to: "/" });
+                    }}
+                  >
+                    Reset draft
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button type="button" size="sm" className="w-full sm:w-auto" onClick={handleSave} disabled={!canSave}>
+              Save split
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {canSave ? "Ready to save" : validationIssueLabel} | Draft autosaved{" "}
+            {formatDraftSavedAt(draft.updatedAt)}
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)] xl:items-start">
+        <div className="space-y-4 sm:space-y-5">
           <ParticipantSection />
           <ItemSection />
           <ChargeSection />
         </div>
-        <SummarySection />
+        <SummarySection className="hidden w-full xl:block" />
       </div>
+      <MobileSummaryDock />
     </div>
   );
 }

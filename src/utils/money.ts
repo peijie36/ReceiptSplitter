@@ -7,6 +7,8 @@ type MoneyInputOptions = {
   emptyWhenZero?: boolean;
 };
 
+const moneyDisplayCleanupPattern = /[$,\s]/g;
+
 export function formatCurrency(cents: number) {
   return currencyFormatter.format(cents / 100);
 }
@@ -30,13 +32,25 @@ export function parseMoneyInput(value: string): { cents: number | null; error?: 
     return { cents: null, error: "Amount cannot be negative." };
   }
 
-  const digits = trimmed.replace(/\D/g, "");
+  const normalized = trimmed.replace(moneyDisplayCleanupPattern, "");
 
-  if (digits.length === 0) {
+  if (normalized.length === 0) {
     return { cents: 0 };
   }
 
-  const cents = Number.parseInt(digits, 10);
+  if (!/^\d*\.?\d*$/.test(normalized)) {
+    return { cents: null, error: "Enter only numbers and a decimal point." };
+  }
+
+  const [dollarText = "", centText = ""] = normalized.split(".");
+
+  if (centText.length > 2) {
+    return { cents: null, error: "Use at most two decimal places." };
+  }
+
+  const dollars = dollarText.length > 0 ? Number.parseInt(dollarText, 10) : 0;
+  const centsPart = centText.length > 0 ? Number.parseInt(centText.padEnd(2, "0"), 10) : 0;
+  const cents = dollars * 100 + centsPart;
 
   if (!Number.isSafeInteger(cents)) {
     return { cents: null, error: "Amount is too large." };
@@ -59,8 +73,10 @@ export function normalizeMoneyInput(
     };
   }
 
+  const displayValue = value.trim().replace(moneyDisplayCleanupPattern, "");
+
   return {
-    displayValue: formatMoneyInput(parsed.cents, options),
+    displayValue: displayValue.length === 0 && options.emptyWhenZero ? "" : displayValue,
     cents: parsed.cents,
   };
 }
