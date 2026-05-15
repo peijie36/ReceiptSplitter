@@ -87,13 +87,13 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
                     {split.items.map((item) => (
                       <div key={item.id} className="rounded-xl border border-border/80 bg-background/70 p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="font-medium">{item.name}</div>
+                          <div className="min-w-0">
+                            <div className="break-words font-medium">{item.name}</div>
                             <div className="mt-1 text-sm text-muted-foreground">
                               {getItemParticipantNames(item, split.participants).join(", ")}
                             </div>
                           </div>
-                          <div className="text-lg font-semibold">{formatCurrency(item.amountCents)}</div>
+                          <div className="shrink-0 text-lg font-semibold">{formatCurrency(item.amountCents)}</div>
                         </div>
                       </div>
                     ))}
@@ -166,8 +166,8 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
                   {totals.participantTotals.map((participant) => (
                     <div key={participant.participantId} className="rounded-xl border border-border/80 bg-background/70 p-4">
                       <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <div className="font-medium">
+                        <div className="min-w-0">
+                          <div className="break-words font-medium">
                             {participant.participantName}
                             {participant.isPayer ? " (payer)" : ""}
                           </div>
@@ -176,7 +176,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
                             {formatCurrency(participant.tipCents)}
                           </div>
                         </div>
-                        <div className="text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
+                        <div className="shrink-0 text-lg font-semibold">{formatCurrency(participant.totalCents)}</div>
                       </div>
                     </div>
                   ))}
@@ -195,8 +195,8 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
               ) : (
                 totals.owedSummary.map((entry) => (
                   <div key={entry.participantId} className="flex items-center justify-between rounded-xl border border-border/80 bg-background/70 p-4">
-                    <span className="font-medium">{entry.participantName}</span>
-                    <span className="text-lg font-semibold">{formatCurrency(entry.owedCents)}</span>
+                    <span className="min-w-0 break-words font-medium">{entry.participantName}</span>
+                    <span className="shrink-0 text-lg font-semibold">{formatCurrency(entry.owedCents)}</span>
                   </div>
                 ))
               )}

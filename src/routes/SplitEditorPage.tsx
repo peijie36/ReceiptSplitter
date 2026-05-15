@@ -30,6 +30,43 @@ function formatDraftSavedAt(isoDate: string) {
   }).format(new Date(isoDate));
 }
 
+type DraftActionsProps = {
+  canSave: boolean;
+  onReset: () => void;
+  onSave: () => void;
+  className: string;
+  buttonClassName: string;
+};
+
+function DraftActions({ canSave, onReset, onSave, className, buttonClassName }: DraftActionsProps) {
+  return (
+    <div className={className}>
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button type="button" variant="outline" size="sm" className={buttonClassName}>
+            Reset draft
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset the current draft?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This clears the unsaved working draft. Saved snapshots will stay in history.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onReset}>Reset draft</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Button type="button" size="sm" className={buttonClassName} onClick={onSave} disabled={!canSave}>
+        Save split
+      </Button>
+    </div>
+  );
+}
+
 export function SplitEditorPage() {
   const navigate = useNavigate();
   const draft = useAppStore((state) => state.draft);
@@ -51,9 +88,15 @@ export function SplitEditorPage() {
     }
   }
 
+  function handleReset() {
+    resetDraft();
+    void navigate({ to: "/" });
+  }
+
   return (
-    <div className="space-y-4 pb-24 sm:space-y-5 xl:pb-0">
-      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card/80 p-4 shadow-calm sm:rounded-2xl sm:p-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="space-y-3 pb-24 sm:space-y-5 xl:pb-0">
+      <h1 className="sr-only">Create receipt split</h1>
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card/80 p-3 shadow-calm sm:gap-4 sm:rounded-2xl sm:p-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="w-full max-w-2xl space-y-2">
           <Label htmlFor="split-title">Split title</Label>
           <Input
@@ -66,14 +109,15 @@ export function SplitEditorPage() {
           <p className="text-sm text-muted-foreground">
             Leave this blank if you want the app to generate a timestamp-based title on save.
           </p>
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2 pt-1">
             <Label>Split mode</Label>
             <RadioGroup
+              aria-label="Split mode"
               className="grid gap-2 md:grid-cols-2"
               value={draft.splitMode}
               onValueChange={(value) => setSplitMode(value as SplitMode)}
             >
-              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-3">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-2.5 sm:p-3">
                 <RadioGroupItem className="mt-1" value="itemized" id="split-mode-itemized" />
                 <span className="space-y-1">
                   <span className="block font-medium">Itemized split</span>
@@ -82,7 +126,7 @@ export function SplitEditorPage() {
                   </span>
                 </span>
               </label>
-              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-3">
+              <label className="flex items-start gap-3 rounded-lg border border-border bg-background/70 p-2.5 sm:p-3">
                 <RadioGroupItem className="mt-1" value="equal" id="split-mode-equal" />
                 <span className="space-y-1">
                   <span className="block font-medium">Split whole bill equally</span>
@@ -95,37 +139,13 @@ export function SplitEditorPage() {
           </div>
         </div>
         <div className="space-y-2 lg:text-right">
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-start lg:justify-end">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm" className="w-full sm:w-auto">
-                  Reset draft
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Reset the current draft?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This clears the unsaved working draft. Saved snapshots will stay in history.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => {
-                      resetDraft();
-                      void navigate({ to: "/" });
-                    }}
-                  >
-                    Reset draft
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-            <Button type="button" size="sm" className="w-full sm:w-auto" onClick={handleSave} disabled={!canSave}>
-              Save split
-            </Button>
-          </div>
+          <DraftActions
+            canSave={canSave}
+            onReset={handleReset}
+            onSave={handleSave}
+            className="hidden gap-2 sm:flex sm:flex-wrap sm:justify-start lg:justify-end"
+            buttonClassName="sm:w-auto"
+          />
           <p className="text-xs text-muted-foreground">
             {canSave ? "Ready to save" : validationIssueLabel} | Draft autosaved{" "}
             {formatDraftSavedAt(draft.updatedAt)}
@@ -133,15 +153,25 @@ export function SplitEditorPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)] xl:items-start">
-        <div className="space-y-4 sm:space-y-5">
+      <div className="grid gap-3 sm:gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(22rem,0.8fr)] xl:items-start">
+        <div className="space-y-3 sm:space-y-5">
           <ParticipantSection />
           <ItemSection />
           <ChargeSection />
         </div>
         <SummarySection className="hidden w-full xl:block" />
       </div>
-      <MobileSummaryDock />
+      <MobileSummaryDock
+        actions={
+          <DraftActions
+            canSave={canSave}
+            onReset={handleReset}
+            onSave={handleSave}
+            className="contents"
+            buttonClassName="w-full"
+          />
+        }
+      />
     </div>
   );
 }

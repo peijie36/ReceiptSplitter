@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, ChevronUp, Receipt, Wallet } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -222,38 +222,70 @@ export function SummarySection({ className }: SummarySectionProps) {
   );
 }
 
-export function MobileSummaryDock() {
+type MobileSummaryDockProps = {
+  actions?: ReactNode;
+};
+
+export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const summaryDockContentId = "mobile-summary-dock-content";
   const { draft, validationErrors, totals } = useSummaryData();
   const issueLabel =
     validationErrors.length === 1 ? "1 issue to fix" : `${validationErrors.length} issues to fix`;
+  const summaryButtonLabel = `Live summary, ${
+    validationErrors.length > 0 ? issueLabel : getSummaryDescription(draft)
+  }, grand total ${formatCurrency(totals.grandTotalCents)}`;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 shadow-calm backdrop-blur xl:hidden">
       <div className="mx-auto max-w-7xl px-3 py-2.5 sm:px-4 sm:py-3">
-        <button
-          type="button"
-          aria-expanded={isOpen}
-          onClick={() => setIsOpen((current) => !current)}
-          className="flex w-full items-center justify-between gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <span className="min-w-0">
-            <span className="block text-sm font-medium">Live summary</span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {validationErrors.length > 0 ? issueLabel : getSummaryDescription(draft)}
+        {actions ? (
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2 sm:hidden">
+            {actions}
+            <button
+              type="button"
+              aria-label={summaryButtonLabel}
+              aria-expanded={isOpen}
+              aria-controls={summaryDockContentId}
+              onClick={() => setIsOpen((current) => !current)}
+              className="flex h-11 min-w-[5.75rem] items-center justify-end gap-2 rounded-md px-1 text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <span>
+                <span className="block text-xs text-muted-foreground">Total</span>
+                <span className="block text-sm font-semibold">{formatCurrency(totals.grandTotalCents)}</span>
+              </span>
+              {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronUp className="h-5 w-5 shrink-0" />}
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            aria-expanded={isOpen}
+            aria-controls={summaryDockContentId}
+            onClick={() => setIsOpen((current) => !current)}
+            className="flex w-full items-center justify-between gap-3 rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">Live summary</span>
+              <span className="block truncate text-xs text-muted-foreground">
+                {validationErrors.length > 0 ? issueLabel : getSummaryDescription(draft)}
+              </span>
             </span>
-          </span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="text-right">
-              <span className="block text-xs text-muted-foreground">Grand total</span>
-              <span className="block font-semibold">{formatCurrency(totals.grandTotalCents)}</span>
+            <span className="flex shrink-0 items-center gap-3">
+              <span className="text-right">
+                <span className="block text-xs text-muted-foreground">Grand total</span>
+                <span className="block font-semibold">{formatCurrency(totals.grandTotalCents)}</span>
+              </span>
+              {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
             </span>
-            {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-          </span>
-        </button>
+          </button>
+        )}
 
         {isOpen ? (
-          <div className="mt-3 max-h-[72vh] overflow-y-auto rounded-md border border-border bg-card p-3 sm:p-4">
+          <div
+            id={summaryDockContentId}
+            className="mt-3 max-h-[72vh] overflow-y-auto rounded-md border border-border bg-card p-3 sm:p-4"
+          >
             <SummaryContent validationErrors={validationErrors} totals={totals} compact />
           </div>
         ) : null}

@@ -28,6 +28,7 @@ function AllocationModeToggle({
     <div className="space-y-2">
       <Label>{label}</Label>
       <RadioGroup
+        aria-label={label}
         className="grid grid-cols-2 gap-1 rounded-md border border-input bg-card p-1"
         value={value}
         onValueChange={(nextValue) => onValueChange(nextValue as AllocationMode)}
@@ -117,7 +118,7 @@ export function ChargeSection() {
 
   return (
     <Card>
-      <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
+      <CardHeader className="p-3 pb-2 sm:p-5 sm:pb-3">
         <CardTitle>Tax and tip</CardTitle>
         <CardDescription>
           {draft.splitMode === "equal"
@@ -125,8 +126,8 @@ export function ChargeSection() {
             : "Allocate extra charges independently as equal or proportional shares."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
-        <div className="grid gap-3 md:grid-cols-2">
+      <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="tax-input">Tax</Label>
             <MoneyInput
@@ -160,7 +161,7 @@ export function ChargeSection() {
           )}
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="tip-input">Tip</Label>
             <MoneyInput

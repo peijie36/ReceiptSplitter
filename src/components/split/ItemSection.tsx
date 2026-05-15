@@ -105,7 +105,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
           {headerAmount === null ? formatCurrency(item.amountCents) : formatCurrency(headerAmount)}
         </div>
       </div>
-      <div className="grid min-w-0 gap-2 p-3 md:grid-cols-[minmax(0,1fr)_9rem]">
+      <div className="grid min-w-0 gap-2 p-2.5 sm:p-3 md:grid-cols-[minmax(0,1fr)_9rem]">
         <div className="space-y-2">
           <Label htmlFor={`item-name-${item.id}`}>Item</Label>
           <Input
@@ -141,7 +141,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
         </div>
         <div className="min-w-0 space-y-2">
           <Label>Assigned to</Label>
-          <div className="rounded-md border border-border bg-card p-2.5">
+          <div className="rounded-md border border-border bg-card p-2 sm:p-2.5">
             <ParticipantAssignmentChips
               participants={participants}
               selectedParticipantIds={state.participantIds}
@@ -245,7 +245,7 @@ export function ItemSection() {
 
   return (
     <Card>
-      <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
+      <CardHeader className="p-3 pb-2 sm:p-5 sm:pb-3">
         <CardTitle>{draft.splitMode === "equal" ? "Bill subtotal" : "Items"}</CardTitle>
         <CardDescription>
           {draft.splitMode === "equal"
@@ -253,9 +253,9 @@ export function ItemSection() {
             : "Enter each line item and choose who shares it."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
+      <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">
         {draft.splitMode === "equal" ? (
-          <div className="space-y-3 rounded-lg border border-dashed border-border p-3">
+          <div className="space-y-2.5 rounded-lg border border-dashed border-border p-2.5 sm:space-y-3 sm:p-3">
             <div className="space-y-2">
               <Label htmlFor="bill-subtotal">Subtotal before tax and tip</Label>
               <MoneyInput
@@ -290,8 +290,8 @@ export function ItemSection() {
             <AlertDescription>You need participants before you can assign bill items.</AlertDescription>
           </Alert>
         ) : (
-          <form className="space-y-3 rounded-lg border border-dashed border-border p-3" onSubmit={handleAddItem}>
-            <div className="grid gap-3 md:grid-cols-[1.2fr_180px]">
+          <form className="space-y-2.5 rounded-lg border border-dashed border-border p-2.5 sm:space-y-3 sm:p-3" onSubmit={handleAddItem}>
+            <div className="grid gap-2.5 sm:gap-3 md:grid-cols-[1.2fr_180px]">
               <div className="space-y-2">
                 <Label htmlFor="new-item-name">Item name</Label>
                 <Input
@@ -322,7 +322,7 @@ export function ItemSection() {
 
             <div className="space-y-2">
               <Label>Assign to</Label>
-              <div className="rounded-md border border-border bg-card p-2.5">
+              <div className="rounded-md border border-border bg-card p-2 sm:p-2.5">
                 <ParticipantAssignmentChips
                   participants={draft.participants}
                   selectedParticipantIds={newItem.participantIds}
@@ -346,7 +346,7 @@ export function ItemSection() {
         ) : null}
 
         {draft.splitMode === "equal" ? null : draft.items.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-3 text-sm text-muted-foreground sm:p-4">
             No items yet. Add each bill item and assign it to one or more participants.
           </div>
         ) : (

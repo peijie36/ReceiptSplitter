@@ -95,11 +95,11 @@ export function ParticipantSection() {
 
   return (
     <Card>
-      <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
+      <CardHeader className="p-3 pb-2 sm:p-5 sm:pb-3">
         <CardTitle>Participants</CardTitle>
         <CardDescription>Add everyone involved in the bill and mark who paid.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4 p-4 pt-0 sm:p-5 sm:pt-0">
+      <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">
         <form className="grid gap-2 sm:grid-cols-[1fr_auto]" onSubmit={handleAddParticipant}>
           <div className="space-y-2">
             <Label htmlFor="participant-name">Add participant name</Label>
@@ -128,18 +128,22 @@ export function ParticipantSection() {
         ) : null}
 
         {draft.participants.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-4 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-3 text-sm text-muted-foreground sm:p-4">
             Add at least one participant. The first participant becomes the payer by default.
           </div>
         ) : (
-          <RadioGroup value={draft.payerId ?? undefined} onValueChange={(value) => handleSetPayer(String(value))}>
+          <RadioGroup
+            aria-label="Payer"
+            value={draft.payerId ?? undefined}
+            onValueChange={(value) => handleSetPayer(String(value))}
+          >
             <div className="space-y-2">
               {draft.participants.map((participant) => (
                 <div
                   key={participant.id}
-                  className="grid gap-2 rounded-lg border border-border/80 bg-background/70 p-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end"
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border border-border/80 bg-background/70 p-2.5 sm:p-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <Label className="sr-only" htmlFor={`participant-${participant.id}`}>
                       Name
                     </Label>
@@ -164,17 +168,17 @@ export function ParticipantSection() {
                     />
                   </div>
                   <div className="flex">
-                    <label className="inline-flex h-9 w-full items-center gap-3 rounded-md border border-border bg-card px-3 text-sm md:w-auto">
+                    <label className="inline-flex h-11 w-full items-center gap-2 rounded-md border border-border bg-card px-2.5 text-sm sm:h-9 sm:px-3 md:w-auto">
                       <RadioGroupItem value={participant.id} id={`payer-${participant.id}`} />
                       <span>Payer</span>
                     </label>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="col-span-2 flex justify-end md:col-span-1">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="w-full md:w-auto"
+                      className="h-8 min-h-8 px-2 text-muted-foreground hover:text-foreground md:h-9 md:min-h-9 md:w-auto md:px-3"
                       onClick={() => handleRemoveParticipant(participant.id)}
                     >
                       <Trash2 className="h-4 w-4" />

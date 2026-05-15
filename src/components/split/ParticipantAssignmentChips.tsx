@@ -34,7 +34,7 @@ export function ParticipantAssignmentChips({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="group" aria-label="Participant assignments">
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"

@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppStore } from "@/store/useAppStore";
 import { hasDraftContent } from "@/utils/draft";
@@ -44,7 +44,9 @@ export function HomePage() {
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card className="overflow-hidden border-none bg-primary text-primary-foreground">
           <CardHeader className="pb-3">
-            <CardTitle className="text-3xl sm:text-4xl">Split the bill without splitting focus.</CardTitle>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              Split the bill without splitting focus.
+            </h1>
             <CardDescription className="max-w-2xl text-primary-foreground/80">
               Add participants, assign line items, apply tax and tip, then see exactly who owes the payer.
             </CardDescription>
@@ -72,7 +74,7 @@ export function HomePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Current draft</CardTitle>
+            <h2 className="text-lg font-semibold tracking-tight">Current draft</h2>
             <CardDescription>Keep going from where you left off, or start clean.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
