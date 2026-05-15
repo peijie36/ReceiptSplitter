@@ -107,7 +107,7 @@ export function SplitEditorPage() {
             placeholder="Team dinner at Colibri"
           />
           <p className="text-sm text-muted-foreground">
-            Leave this blank if you want the app to generate a timestamp-based title on save.
+            Leave blank to auto-name on save.
           </p>
           <div className="space-y-2 pt-1">
             <Label>Split mode</Label>
@@ -122,7 +122,7 @@ export function SplitEditorPage() {
                 <span className="space-y-1">
                   <span className="block font-medium">Itemized split</span>
                   <span className="block text-sm text-muted-foreground">
-                    Assign line items to specific participants, then allocate tax and tip.
+                    Assign items, tax, and tip.
                   </span>
                 </span>
               </label>
@@ -131,7 +131,7 @@ export function SplitEditorPage() {
                 <span className="space-y-1">
                   <span className="block font-medium">Split whole bill equally</span>
                   <span className="block text-sm text-muted-foreground">
-                    Enter one subtotal and divide subtotal, tax, and tip evenly across everyone.
+                    Split subtotal, tax, and tip evenly.
                   </span>
                 </span>
               </label>

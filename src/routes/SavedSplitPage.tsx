@@ -72,7 +72,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
               <CardDescription>
                 {split.splitMode === "equal"
                   ? "This split used whole-bill equal mode."
-                  : "Saved line items and their participant assignments."}
+                  : "Saved items and assignments."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -106,7 +106,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Split settings</CardTitle>
-              <CardDescription>Saved allocation choices for tax and tip.</CardDescription>
+              <CardDescription>Saved tax and tip settings.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-border bg-secondary/40 p-4">
@@ -134,7 +134,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
         <Card className="sticky top-6">
           <CardHeader>
             <CardTitle>Saved summary</CardTitle>
-            <CardDescription>Per-person totals and the final owed list.</CardDescription>
+            <CardDescription>Totals and owed amounts.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
@@ -159,7 +159,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
             <div className="space-y-3">
               <div>
                 <h3 className="font-medium">Per-person totals</h3>
-                <p className="text-sm text-muted-foreground">Includes subtotal, tax, and tip for every participant.</p>
+                <p className="text-sm text-muted-foreground">Subtotal, tax, and tip by person.</p>
               </div>
               <ScrollArea className="max-h-[320px]">
                 <div className="space-y-3 pr-3">

@@ -31,8 +31,8 @@ function useSummaryData() {
 
 function getSummaryDescription(draft: DraftSplit) {
   return draft.splitMode === "equal"
-    ? "Whole-bill equal mode splits subtotal, tax, and tip evenly in cents."
-    : "Everything reconciles in cents and the payer stays out of the owes list.";
+    ? "Bill is split evenly in cents."
+    : "Totals reconcile to the cent.";
 }
 
 type PersonSummaryRowProps = {
@@ -168,7 +168,7 @@ function SummaryContent({ validationErrors, totals, compact = false }: SummaryCo
       <div className="space-y-3">
         <div>
           <h3 className="font-medium">Who owes the payer</h3>
-          <p className="text-sm text-muted-foreground">Reimbursements go to the person who paid.</p>
+          <p className="text-sm text-muted-foreground">Payments go to the payer.</p>
         </div>
         {payerTotal ? (
           <PersonSummaryRow
@@ -181,7 +181,7 @@ function SummaryContent({ validationErrors, totals, compact = false }: SummaryCo
         ) : null}
         {totals.owedSummary.length === 0 ? (
           <div className="rounded-md border border-dashed border-border bg-secondary/40 p-3 text-sm text-muted-foreground">
-            No reimbursements yet. Once participants and a payer are set, the owed list appears here.
+            No reimbursements yet.
           </div>
         ) : (
           <div className="space-y-2">

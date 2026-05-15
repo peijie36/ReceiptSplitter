@@ -122,8 +122,8 @@ export function ChargeSection() {
         <CardTitle>Tax and tip</CardTitle>
         <CardDescription>
           {draft.splitMode === "equal"
-            ? "Equal bill mode splits tax and tip evenly across all participants."
-            : "Allocate extra charges independently as equal or proportional shares."}
+            ? "Tax and tip split evenly."
+            : "Split tax and tip equally or proportionally."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">

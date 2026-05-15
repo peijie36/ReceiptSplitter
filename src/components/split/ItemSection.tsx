@@ -249,8 +249,8 @@ export function ItemSection() {
         <CardTitle>{draft.splitMode === "equal" ? "Bill subtotal" : "Items"}</CardTitle>
         <CardDescription>
           {draft.splitMode === "equal"
-            ? "Enter the pre-tax, pre-tip subtotal. In equal mode, subtotal, tax, and tip are all split evenly."
-            : "Enter each line item and choose who shares it."}
+            ? "Enter the subtotal before tax and tip."
+            : "Add items and assign shares."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">
@@ -272,7 +272,7 @@ export function ItemSection() {
               />
             </div>
             <div className="text-sm text-muted-foreground">
-              The full bill will be divided equally across every participant, including the payer.
+              Everyone, including payer, splits evenly.
             </div>
           </div>
         ) : null}
@@ -287,7 +287,7 @@ export function ItemSection() {
         {draft.splitMode === "equal" ? null : draft.participants.length === 0 ? (
           <Alert>
             <AlertTitle>Add participants first</AlertTitle>
-            <AlertDescription>You need participants before you can assign bill items.</AlertDescription>
+            <AlertDescription>Add participants before items.</AlertDescription>
           </Alert>
         ) : (
           <form className="space-y-2.5 rounded-lg border border-dashed border-border p-2.5 sm:space-y-3 sm:p-3" onSubmit={handleAddItem}>
@@ -347,7 +347,7 @@ export function ItemSection() {
 
         {draft.splitMode === "equal" ? null : draft.items.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-3 text-sm text-muted-foreground sm:p-4">
-            No items yet. Add each bill item and assign it to one or more participants.
+            No items yet. Add one to start.
           </div>
         ) : (
           <div className="space-y-2">

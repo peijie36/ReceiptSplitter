@@ -97,7 +97,7 @@ export function ParticipantSection() {
     <Card>
       <CardHeader className="p-3 pb-2 sm:p-5 sm:pb-3">
         <CardTitle>Participants</CardTitle>
-        <CardDescription>Add everyone involved in the bill and mark who paid.</CardDescription>
+        <CardDescription>Add people and choose the payer.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 p-3 pt-0 sm:space-y-4 sm:p-5 sm:pt-0">
         <form className="grid gap-2 sm:grid-cols-[1fr_auto]" onSubmit={handleAddParticipant}>
@@ -129,7 +129,7 @@ export function ParticipantSection() {
 
         {draft.participants.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-secondary/40 p-3 text-sm text-muted-foreground sm:p-4">
-            Add at least one participant. The first participant becomes the payer by default.
+            Add someone to start. First person is payer.
           </div>
         ) : (
           <RadioGroup
