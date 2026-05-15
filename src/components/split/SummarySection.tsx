@@ -238,9 +238,9 @@ export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 shadow-calm backdrop-blur xl:hidden">
-      <div className="mx-auto max-w-7xl px-3 py-2.5 sm:px-4 sm:py-3">
+      <div className="mx-auto max-w-7xl px-2 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] pl-[calc(0.5rem+env(safe-area-inset-left))] pr-[calc(0.5rem+env(safe-area-inset-right))] sm:px-4 sm:py-3 sm:pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         {actions ? (
-          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2 sm:hidden">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-1.5 sm:hidden">
             {actions}
             <button
               type="button"
@@ -248,13 +248,13 @@ export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
               aria-expanded={isOpen}
               aria-controls={summaryDockContentId}
               onClick={() => setIsOpen((current) => !current)}
-              className="flex h-11 min-w-[5.75rem] items-center justify-end gap-2 rounded-md px-1 text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-11 min-w-[4.5rem] items-center justify-end gap-1 rounded-md px-1 text-right focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               <span>
                 <span className="block text-xs text-muted-foreground">Total</span>
                 <span className="block text-sm font-semibold">{formatCurrency(totals.grandTotalCents)}</span>
               </span>
-              {isOpen ? <ChevronDown className="h-5 w-5 shrink-0" /> : <ChevronUp className="h-5 w-5 shrink-0" />}
+              {isOpen ? <ChevronDown className="h-6 w-6 shrink-0" /> : <ChevronUp className="h-6 w-6 shrink-0" />}
             </button>
           </div>
         ) : (

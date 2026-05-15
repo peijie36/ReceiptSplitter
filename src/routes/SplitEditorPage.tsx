@@ -168,7 +168,7 @@ export function SplitEditorPage() {
             onReset={handleReset}
             onSave={handleSave}
             className="contents"
-            buttonClassName="w-full"
+            buttonClassName="w-full px-2"
           />
         }
       />
