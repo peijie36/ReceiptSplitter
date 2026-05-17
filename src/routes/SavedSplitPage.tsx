@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, PencilLine } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Check, Copy, PencilLine } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "@/store/useAppStore";
 import { formatCurrency } from "@/utils/money";
+import { buildPaymentSummaryText } from "@/utils/paymentSummary";
 import { calculateFinalTotals, getItemParticipantNames } from "@/utils/splitCalculations";
 
 type SavedSplitPageProps = {
@@ -23,6 +25,7 @@ function formatSavedDate(isoDate: string) {
 
 export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
   const navigate = useNavigate();
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const split = useAppStore((state) => state.savedSplits.find((entry) => entry.id === splitId));
   const loadSavedSplitToDraft = useAppStore((state) => state.loadSavedSplitToDraft);
 
@@ -37,7 +40,17 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
     );
   }
 
-  const totals = calculateFinalTotals(split);
+  const savedSplit = split;
+  const totals = calculateFinalTotals(savedSplit);
+
+  async function handleCopyPaymentSummary() {
+    try {
+      await navigator.clipboard.writeText(buildPaymentSummaryText(savedSplit));
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("error");
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -132,9 +145,26 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
         </div>
 
         <Card className="sticky top-6">
-          <CardHeader>
-            <CardTitle>Saved summary</CardTitle>
-            <CardDescription>Totals and owed amounts.</CardDescription>
+          <CardHeader className="gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Saved summary</CardTitle>
+              <CardDescription>Totals and owed amounts.</CardDescription>
+            </div>
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <Button type="button" variant="outline" size="sm" onClick={handleCopyPaymentSummary}>
+                {copyStatus === "copied" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copyStatus === "copied" ? "Copied" : "Copy summary"}
+              </Button>
+              {copyStatus === "error" ? (
+                <p className="text-xs text-destructive" role="status">
+                  Unable to copy. Try again.
+                </p>
+              ) : copyStatus === "copied" ? (
+                <p className="text-xs text-muted-foreground" role="status">
+                  Payment summary copied.
+                </p>
+              ) : null}
+            </div>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-3">
