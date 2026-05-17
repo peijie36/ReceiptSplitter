@@ -39,6 +39,11 @@ export function HomePage() {
 
   const draftExists = hasDraftContent(draft);
 
+  function handleStartFresh() {
+    resetDraft();
+    void navigate({ to: "/split/new" });
+  }
+
   return (
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -52,17 +57,33 @@ export function HomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3 pb-6">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                resetDraft();
-                void navigate({ to: "/split/new" });
-              }}
-            >
-              <PlusCircle className="h-4 w-4" />
-              Start fresh split
-            </Button>
+            {draftExists ? (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="secondary">
+                    <PlusCircle className="h-4 w-4" />
+                    Start fresh split
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset the current draft?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This clears the unsaved working draft before starting a new split. Saved snapshots will stay in history.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleStartFresh}>Start fresh</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : (
+              <Button type="button" variant="secondary" onClick={handleStartFresh}>
+                <PlusCircle className="h-4 w-4" />
+                Start fresh split
+              </Button>
+            )}
             {draftExists ? (
               <Button type="button" variant="outline" onClick={() => void navigate({ to: "/split/new" })}>
                 <PencilLine className="h-4 w-4" />

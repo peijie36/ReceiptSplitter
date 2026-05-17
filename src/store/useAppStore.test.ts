@@ -106,4 +106,34 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().savedSplits[0].billSubtotalCents).toBe(8000);
     expect(useAppStore.getState().savedSplits[0].items).toHaveLength(0);
   });
+
+  it("rejects invalid cent values at the store boundary", () => {
+    const store = useAppStore.getState();
+
+    store.addParticipant("Alex");
+    const participantId = useAppStore.getState().draft.participants[0]?.id ?? "";
+
+    expect(
+      store.addItem({
+        name: "Soup",
+        amountCents: Number.NaN,
+        participantIds: [participantId],
+      }),
+    ).toEqual({
+      ok: false,
+      error: "Item amount must be a whole number of cents.",
+    });
+    expect(store.setBillSubtotalCents(1000.5)).toEqual({
+      ok: false,
+      error: "Subtotal must be a whole number of cents.",
+    });
+    expect(store.setTaxCents(Number.POSITIVE_INFINITY)).toEqual({
+      ok: false,
+      error: "Tax must be a whole number of cents.",
+    });
+    expect(store.setTipCents(Number.MAX_SAFE_INTEGER + 1)).toEqual({
+      ok: false,
+      error: "Tip must be a whole number of cents.",
+    });
+  });
 });

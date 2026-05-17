@@ -126,6 +126,31 @@ describe("calculateFinalTotals", () => {
     expect(result.participantTotals.find((entry) => entry.participantId === "casey")?.taxCents).toBe(50);
   });
 
+  it("allocates proportional charges exactly for large safe integer cent values", () => {
+    const split = buildSplit({
+      participants: [
+        { id: "payer", name: "Alex" },
+        { id: "blair", name: "Blair" },
+        { id: "casey", name: "Casey" },
+      ],
+      items: [
+        { id: "item-1", name: "A", amountCents: 9007199253875964, participantIds: ["payer"] },
+        { id: "item-2", name: "B", amountCents: 9007199252102965, participantIds: ["blair"] },
+        { id: "item-3", name: "C", amountCents: 725189, participantIds: ["casey"] },
+      ],
+      taxCents: 9007199253922172,
+      taxAllocationMode: "proportional",
+    });
+
+    const result = calculateFinalTotals(split);
+
+    expect(result.participantTotals.map((entry) => entry.taxCents)).toEqual([
+      4503599627223038,
+      4503599626336539,
+      362595,
+    ]);
+  });
+
   it("allocates tax equally across all participants", () => {
     const split = buildSplit({
       items: [{ id: "item-1", name: "Soup", amountCents: 900, participantIds: ["blair"] }],

@@ -1,5 +1,9 @@
 import type { DraftSplit, Item, Participant } from "@/types/split";
 
+type CentValidationOptions = {
+  allowZero?: boolean;
+};
+
 export function normalizeName(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
@@ -45,6 +49,11 @@ export function validateItemInput(item: Pick<Item, "name" | "amountCents" | "par
     return "Item name is required.";
   }
 
+  const centError = validateCentAmount(item.amountCents, "Item amount", { allowZero: false });
+  if (centError) {
+    return centError;
+  }
+
   if (item.amountCents <= 0) {
     return "Item amount must be greater than zero.";
   }
@@ -62,8 +71,31 @@ export function validateItemInput(item: Pick<Item, "name" | "amountCents" | "par
   return undefined;
 }
 
+export function validateCentAmount(
+  amountCents: number,
+  label: string,
+  options: CentValidationOptions = {},
+) {
+  if (!Number.isSafeInteger(amountCents)) {
+    return `${label} must be a whole number of cents.`;
+  }
+
+  if (amountCents < 0) {
+    return `${label} cannot be negative.`;
+  }
+
+  if (options.allowZero === false && amountCents === 0) {
+    return `${label} must be greater than zero.`;
+  }
+
+  return undefined;
+}
+
 export function getDraftValidationErrors(draft: DraftSplit) {
   const errors: string[] = [];
+  const subtotalError = validateCentAmount(draft.billSubtotalCents, "Subtotal");
+  const taxError = validateCentAmount(draft.taxCents, "Tax");
+  const tipError = validateCentAmount(draft.tipCents, "Tip");
 
   if (draft.participants.length === 0) {
     errors.push("Add at least one participant.");
@@ -77,16 +109,18 @@ export function getDraftValidationErrors(draft: DraftSplit) {
     errors.push("Add at least one item.");
   }
 
-  if (draft.splitMode === "equal" && draft.billSubtotalCents <= 0) {
+  if (subtotalError) {
+    errors.push(subtotalError);
+  } else if (draft.splitMode === "equal" && draft.billSubtotalCents <= 0) {
     errors.push("Enter a subtotal greater than zero.");
   }
 
-  if (draft.taxCents < 0) {
-    errors.push("Tax cannot be negative.");
+  if (taxError) {
+    errors.push(taxError);
   }
 
-  if (draft.tipCents < 0) {
-    errors.push("Tip cannot be negative.");
+  if (tipError) {
+    errors.push(tipError);
   }
 
   for (const participant of draft.participants) {

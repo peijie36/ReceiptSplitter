@@ -74,8 +74,9 @@ export function SplitEditorPage() {
   const setSplitMode = useAppStore((state) => state.setSplitMode);
   const saveDraft = useAppStore((state) => state.saveDraft);
   const resetDraft = useAppStore((state) => state.resetDraft);
+  const localEditorIssues = useAppStore((state) => state.localEditorIssues);
 
-  const validationErrors = getDraftValidationErrors(draft);
+  const validationErrors = [...getDraftValidationErrors(draft), ...Object.values(localEditorIssues)];
   const canSave = validationErrors.length === 0;
   const validationIssueLabel =
     validationErrors.length === 1 ? "1 issue to fix before saving" : `${validationErrors.length} issues to fix before saving`;

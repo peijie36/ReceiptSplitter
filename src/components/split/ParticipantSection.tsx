@@ -16,6 +16,7 @@ export function ParticipantSection() {
   const updateParticipantName = useAppStore((state) => state.updateParticipantName);
   const removeParticipant = useAppStore((state) => state.removeParticipant);
   const setPayer = useAppStore((state) => state.setPayer);
+  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
 
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participantDrafts, setParticipantDrafts] = useState<Record<string, string>>({});
@@ -53,22 +54,27 @@ export function ParticipantSection() {
   function handleParticipantBlur(participantId: string, currentName: string) {
     const nextName = participantDrafts[participantId] ?? "";
     const normalizedNextName = normalizeName(nextName);
+    const issueKey = `participant:${participantId}`;
 
     if (normalizedNextName === currentName) {
       updateParticipantDraft(participantId, currentName);
       setError(null);
+      setLocalEditorIssue(issueKey);
       return;
     }
 
     const result = updateParticipantName(participantId, nextName);
 
     if (!result.ok) {
-      setError(result.error ?? "Unable to update participant.");
+      const message = result.error ?? "Unable to update participant.";
+      setError(message);
+      setLocalEditorIssue(issueKey, message);
       return;
     }
 
     updateParticipantDraft(participantId, normalizedNextName);
     setError(null);
+    setLocalEditorIssue(issueKey);
   }
 
   function handleRemoveParticipant(participantId: string) {
@@ -80,6 +86,7 @@ export function ParticipantSection() {
     }
 
     setError(null);
+    setLocalEditorIssue(`participant:${participantId}`);
   }
 
   function handleSetPayer(participantId: string) {
@@ -155,6 +162,7 @@ export function ParticipantSection() {
                       onChange={(event) => {
                         updateParticipantDraft(participant.id, event.target.value);
                         setError(null);
+                        setLocalEditorIssue(`participant:${participant.id}`);
                       }}
                       onBlur={() => handleParticipantBlur(participant.id, participant.name)}
                       onKeyDown={(event) => {

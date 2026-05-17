@@ -19,7 +19,11 @@ type SummaryContentProps = {
 
 function useSummaryData() {
   const draft = useAppStore((state) => state.draft);
-  const validationErrors = useMemo(() => getDraftValidationErrors(draft), [draft]);
+  const localEditorIssues = useAppStore((state) => state.localEditorIssues);
+  const validationErrors = useMemo(
+    () => [...getDraftValidationErrors(draft), ...Object.values(localEditorIssues)],
+    [draft, localEditorIssues],
+  );
   const totals = useMemo(() => calculateFinalTotals(draft), [draft]);
 
   return {

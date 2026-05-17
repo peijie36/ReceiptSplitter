@@ -12,7 +12,13 @@ import type {
 } from "@/types/split";
 import { createDraftFromSavedSplit, createEmptyDraft, createSnapshotFromDraft, touchDraft } from "@/utils/draft";
 import { createId } from "@/utils/id";
-import { getDraftValidationErrors, normalizeName, validateItemInput, validateParticipantName } from "@/utils/draftValidation";
+import {
+  getDraftValidationErrors,
+  normalizeName,
+  validateCentAmount,
+  validateItemInput,
+  validateParticipantName,
+} from "@/utils/draftValidation";
 
 type ItemInput = {
   name: string;
@@ -23,6 +29,7 @@ type ItemInput = {
 type AppStore = {
   draft: DraftSplit;
   savedSplits: SavedSplit[];
+  localEditorIssues: Record<string, string>;
   setDraftTitle: (title: string) => void;
   setSplitMode: (mode: SplitMode) => void;
   setPayer: (participantId: string) => ActionResult;
@@ -41,6 +48,8 @@ type AppStore = {
   saveDraft: () => SaveDraftResult;
   loadSavedSplitToDraft: (splitId: string) => ActionResult;
   deleteSavedSplit: (splitId: string) => void;
+  setLocalEditorIssue: (key: string, error?: string) => void;
+  clearLocalEditorIssues: () => void;
 };
 
 function success(): ActionResult {
@@ -72,6 +81,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       draft: createEmptyDraft(),
       savedSplits: [],
+      localEditorIssues: {},
       setDraftTitle: (title) => {
         set((state) => ({
           draft: touchDraft({
@@ -238,8 +248,10 @@ export const useAppStore = create<AppStore>()(
         }));
       },
       setBillSubtotalCents: (billSubtotalCents) => {
-        if (billSubtotalCents < 0) {
-          return failure("Subtotal cannot be negative.");
+        const error = validateCentAmount(billSubtotalCents, "Subtotal");
+
+        if (error) {
+          return failure(error);
         }
 
         set((state) => ({
@@ -252,8 +264,10 @@ export const useAppStore = create<AppStore>()(
         return success();
       },
       setTaxCents: (taxCents) => {
-        if (taxCents < 0) {
-          return failure("Tax cannot be negative.");
+        const error = validateCentAmount(taxCents, "Tax");
+
+        if (error) {
+          return failure(error);
         }
 
         set((state) => ({
@@ -266,8 +280,10 @@ export const useAppStore = create<AppStore>()(
         return success();
       },
       setTipCents: (tipCents) => {
-        if (tipCents < 0) {
-          return failure("Tip cannot be negative.");
+        const error = validateCentAmount(tipCents, "Tip");
+
+        if (error) {
+          return failure(error);
         }
 
         set((state) => ({
@@ -298,10 +314,20 @@ export const useAppStore = create<AppStore>()(
       resetDraft: () => {
         set({
           draft: createEmptyDraft(),
+          localEditorIssues: {},
         });
       },
       saveDraft: () => {
         const draft = get().draft;
+        const localEditorIssue = Object.values(get().localEditorIssues)[0];
+
+        if (localEditorIssue) {
+          return {
+            ok: false,
+            error: localEditorIssue,
+          };
+        }
+
         const errors = getDraftValidationErrors(draft);
 
         if (errors.length > 0) {
@@ -332,6 +358,7 @@ export const useAppStore = create<AppStore>()(
 
         set({
           draft: createDraftFromSavedSplit(split),
+          localEditorIssues: {},
         });
 
         return success();
@@ -340,6 +367,26 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({
           savedSplits: state.savedSplits.filter((split) => split.id !== splitId),
         }));
+      },
+      setLocalEditorIssue: (key, error) => {
+        set((state) => {
+          const nextIssues = { ...state.localEditorIssues };
+
+          if (error) {
+            nextIssues[key] = error;
+          } else {
+            delete nextIssues[key];
+          }
+
+          return {
+            localEditorIssues: nextIssues,
+          };
+        });
+      },
+      clearLocalEditorIssues: () => {
+        set({
+          localEditorIssues: {},
+        });
       },
     }),
     {

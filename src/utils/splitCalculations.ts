@@ -99,7 +99,7 @@ export function allocateByWeights(
     return {};
   }
 
-  const weightSum = participantIds.reduce((sum, participantId) => sum + (weights[participantId] ?? 0), 0);
+  const weightSum = participantIds.reduce((sum, participantId) => sum + BigInt(weights[participantId] ?? 0), 0n);
 
   if (weightSum <= 0) {
     return splitEvenly(totalCents, participantIds);
@@ -107,13 +107,13 @@ export function allocateByWeights(
 
   const floors: Record<string, number> = {};
   const remainderCandidates = participantIds.map((participantId) => {
-    const exactShare = (totalCents * (weights[participantId] ?? 0)) / weightSum;
-    const flooredShare = Math.floor(exactShare);
-    floors[participantId] = flooredShare;
+    const numerator = BigInt(totalCents) * BigInt(weights[participantId] ?? 0);
+    const flooredShare = numerator / weightSum;
+    floors[participantId] = Number(flooredShare);
 
     return {
       participantId,
-      fractionalRemainder: exactShare - flooredShare,
+      fractionalRemainder: numerator % weightSum,
     };
   });
 
@@ -121,7 +121,7 @@ export function allocateByWeights(
 
   remainderCandidates.sort((left, right) => {
     if (right.fractionalRemainder !== left.fractionalRemainder) {
-      return right.fractionalRemainder - left.fractionalRemainder;
+      return right.fractionalRemainder > left.fractionalRemainder ? 1 : -1;
     }
 
     return participantIds.indexOf(left.participantId) - participantIds.indexOf(right.participantId);

@@ -58,6 +58,7 @@ export function ChargeSection() {
   const setTipCents = useAppStore((state) => state.setTipCents);
   const setTaxAllocationMode = useAppStore((state) => state.setTaxAllocationMode);
   const setTipAllocationMode = useAppStore((state) => state.setTipAllocationMode);
+  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
 
   const [taxInput, setTaxInput] = useState(formatMoneyInput(draft.taxCents, { emptyWhenZero: true }));
   const [tipInput, setTipInput] = useState(formatMoneyInput(draft.tipCents, { emptyWhenZero: true }));
@@ -84,36 +85,46 @@ export function ChargeSection() {
     setTaxInput(value);
 
     if (cents === null) {
-      setError(nextError ?? "Enter a valid tax amount.");
+      const message = nextError ?? "Enter a valid tax amount.";
+      setError(message);
+      setLocalEditorIssue("tax", message);
       return;
     }
 
     const result = setTaxCents(cents);
 
     if (!result.ok) {
-      setError(result.error ?? "Unable to set tax.");
+      const message = result.error ?? "Unable to set tax.";
+      setError(message);
+      setLocalEditorIssue("tax", message);
       return;
     }
 
     setError(null);
+    setLocalEditorIssue("tax");
   }
 
   function handleTipChange(value: string, cents: number | null, nextError?: string) {
     setTipInput(value);
 
     if (cents === null) {
-      setError(nextError ?? "Enter a valid tip amount.");
+      const message = nextError ?? "Enter a valid tip amount.";
+      setError(message);
+      setLocalEditorIssue("tip", message);
       return;
     }
 
     const result = setTipCents(cents);
 
     if (!result.ok) {
-      setError(result.error ?? "Unable to set tip.");
+      const message = result.error ?? "Unable to set tip.";
+      setError(message);
+      setLocalEditorIssue("tip", message);
       return;
     }
 
     setError(null);
+    setLocalEditorIssue("tip");
   }
 
   return (
@@ -142,6 +153,8 @@ export function ChargeSection() {
               onBlur={() => {
                 setFocusedChargeInput(null);
                 setTaxInput(formatMoneyInput(draft.taxCents, { emptyWhenZero: true }));
+                setError(null);
+                setLocalEditorIssue("tax");
               }}
             />
           </div>
@@ -176,6 +189,8 @@ export function ChargeSection() {
               onBlur={() => {
                 setFocusedChargeInput(null);
                 setTipInput(formatMoneyInput(draft.tipCents, { emptyWhenZero: true }));
+                setError(null);
+                setLocalEditorIssue("tip");
               }}
             />
           </div>

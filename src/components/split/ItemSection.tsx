@@ -35,19 +35,27 @@ type ExistingItemEditorProps = {
 function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEditorProps) {
   const updateItem = useAppStore((state) => state.updateItem);
   const removeItem = useAppStore((state) => state.removeItem);
+  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
 
   const [state, setState] = useState<ItemFormState>(buildFormState(item));
   const [error, setError] = useState<string | null>(null);
+  const issueKey = `item:${item.id}`;
 
   useEffect(() => {
     setState(buildFormState(item));
   }, [item]);
 
+  useEffect(() => {
+    return () => setLocalEditorIssue(issueKey);
+  }, [issueKey, setLocalEditorIssue]);
+
   function commitChanges(nextState: ItemFormState = state) {
     const parsed = parseMoneyInput(nextState.amount);
 
     if (parsed.cents === null) {
-      setError(parsed.error ?? "Enter a valid item amount.");
+      const message = parsed.error ?? "Enter a valid item amount.";
+      setError(message);
+      setLocalEditorIssue(issueKey, message);
       return false;
     }
 
@@ -58,11 +66,14 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
     });
 
     if (!result.ok) {
-      setError(result.error ?? "Unable to update item.");
+      const message = result.error ?? "Unable to update item.";
+      setError(message);
+      setLocalEditorIssue(issueKey, message);
       return false;
     }
 
     setError(null);
+    setLocalEditorIssue(issueKey);
     return true;
   }
 
@@ -75,7 +86,9 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
     setState(nextState);
 
     if (participantIds.length === 0) {
-      setError("Assign this item to at least one participant before updating.");
+      const message = "Assign this item to at least one participant before updating.";
+      setError(message);
+      setLocalEditorIssue(issueKey, message);
       return;
     }
 
@@ -115,6 +128,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
             onChange={(event) => {
               setState((current) => ({ ...current, name: event.target.value }));
               setError(null);
+              setLocalEditorIssue(issueKey);
             }}
             onBlur={() => {
               commitChanges();
@@ -132,6 +146,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
             onValueChange={({ displayValue }) => {
               setState((current) => ({ ...current, amount: displayValue }));
               setError(null);
+              setLocalEditorIssue(issueKey);
             }}
             onBlur={() => {
               commitChanges();
@@ -150,7 +165,16 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
           </div>
         </div>
         <div className="flex items-end justify-end">
-          <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(item.id)} className="w-full">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setLocalEditorIssue(issueKey);
+              removeItem(item.id);
+            }}
+            className="w-full"
+          >
             <Trash2 className="h-4 w-4" />
             Delete
           </Button>
@@ -170,6 +194,7 @@ export function ItemSection() {
   const draft = useAppStore((state) => state.draft);
   const addItem = useAppStore((state) => state.addItem);
   const setBillSubtotalCents = useAppStore((state) => state.setBillSubtotalCents);
+  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
 
   const [newItem, setNewItem] = useState<ItemFormState>({
     name: "",
@@ -229,18 +254,23 @@ export function ItemSection() {
     setBillSubtotalInput(normalized.displayValue);
 
     if (normalized.cents === null) {
-      setError(normalized.error ?? "Enter a valid subtotal.");
+      const message = normalized.error ?? "Enter a valid subtotal.";
+      setError(message);
+      setLocalEditorIssue("billSubtotal", message);
       return;
     }
 
     const result = setBillSubtotalCents(normalized.cents);
 
     if (!result.ok) {
-      setError(result.error ?? "Unable to set subtotal.");
+      const message = result.error ?? "Unable to set subtotal.";
+      setError(message);
+      setLocalEditorIssue("billSubtotal", message);
       return;
     }
 
     setError(null);
+    setLocalEditorIssue("billSubtotal");
   }
 
   return (
@@ -268,6 +298,8 @@ export function ItemSection() {
                 onBlur={() => {
                   setIsBillSubtotalFocused(false);
                   setBillSubtotalInput(formatMoneyInput(draft.billSubtotalCents, { emptyWhenZero: true }));
+                  setError(null);
+                  setLocalEditorIssue("billSubtotal");
                 }}
               />
             </div>
