@@ -15,6 +15,7 @@ function resetStore() {
 
 describe("useAppStore", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     resetStore();
   });
 
@@ -175,6 +176,119 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().savedSplits[0].splitMode).toBe("equal");
     expect(useAppStore.getState().savedSplits[0].billSubtotalCents).toBe(8000);
     expect(useAppStore.getState().savedSplits[0].items).toHaveLength(0);
+  });
+
+  it("initializes repayment tracking when saving a draft", () => {
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Repayment dinner");
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+    const participantIds = useAppStore.getState().draft.participants.map((participant) => participant.id);
+
+    store.addItem({
+      name: "Burger",
+      amountCents: 1200,
+      participantIds: [participantIds[1]],
+    });
+
+    expect(store.saveDraft().ok).toBe(true);
+    expect(useAppStore.getState().savedSplits[0].paidParticipantIds).toEqual([]);
+  });
+
+  it("toggles a saved owed participant as paid and updates the saved split timestamp", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-21T10:00:00.000Z"));
+
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Paid dinner");
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+    const participantIds = useAppStore.getState().draft.participants.map((participant) => participant.id);
+    const friendId = participantIds[1];
+
+    store.addItem({
+      name: "Burger",
+      amountCents: 1200,
+      participantIds: [friendId],
+    });
+    store.saveDraft();
+
+    const savedSplit = useAppStore.getState().savedSplits[0];
+
+    vi.setSystemTime(new Date("2026-05-21T11:00:00.000Z"));
+    expect(useAppStore.getState().toggleSavedSplitParticipantPaid(savedSplit.id, friendId)).toEqual({ ok: true });
+
+    expect(useAppStore.getState().savedSplits[0].paidParticipantIds).toEqual([friendId]);
+    expect(useAppStore.getState().savedSplits[0].updatedAt).toBe("2026-05-21T11:00:00.000Z");
+
+    expect(useAppStore.getState().toggleSavedSplitParticipantPaid(savedSplit.id, friendId)).toEqual({ ok: true });
+    expect(useAppStore.getState().savedSplits[0].paidParticipantIds).toEqual([]);
+  });
+
+  it("rejects toggling a participant who does not currently owe the payer", () => {
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Invalid repayment");
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+    const participantIds = useAppStore.getState().draft.participants.map((participant) => participant.id);
+    const payerId = participantIds[0];
+    const friendId = participantIds[1];
+
+    store.addItem({
+      name: "Tea",
+      amountCents: 500,
+      participantIds: [payerId],
+    });
+    store.saveDraft();
+
+    const savedSplit = useAppStore.getState().savedSplits[0];
+
+    expect(useAppStore.getState().toggleSavedSplitParticipantPaid(savedSplit.id, friendId)).toEqual({
+      ok: false,
+      error: "Only participants who owe the payer can be marked paid.",
+    });
+    expect(useAppStore.getState().savedSplits[0]).toEqual(savedSplit);
+  });
+
+  it("carries paid status into an edited saved split and prunes people who no longer owe", () => {
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Edited repayment");
+    store.addParticipant("Alex");
+    store.addParticipant("Blair");
+    store.addParticipant("Casey");
+    const participantIds = useAppStore.getState().draft.participants.map((participant) => participant.id);
+    const blairId = participantIds[1];
+    const caseyId = participantIds[2];
+
+    store.addItem({
+      name: "Burger",
+      amountCents: 1200,
+      participantIds: [blairId],
+    });
+    store.addItem({
+      name: "Fries",
+      amountCents: 900,
+      participantIds: [caseyId],
+    });
+    store.saveDraft();
+
+    const savedSplit = useAppStore.getState().savedSplits[0];
+    useAppStore.getState().toggleSavedSplitParticipantPaid(savedSplit.id, blairId);
+    useAppStore.getState().toggleSavedSplitParticipantPaid(savedSplit.id, caseyId);
+
+    expect(useAppStore.getState().loadSavedSplitToDraft(savedSplit.id)).toEqual({ ok: true });
+    useAppStore.getState().updateItem(useAppStore.getState().draft.items[1].id, {
+      name: "Fries",
+      amountCents: 900,
+      participantIds: [useAppStore.getState().draft.payerId ?? ""],
+    });
+
+    expect(useAppStore.getState().saveDraft().ok).toBe(true);
+    expect(useAppStore.getState().savedSplits[0].paidParticipantIds).toEqual([blairId]);
   });
 
   it("rejects invalid cent values at the store boundary", () => {

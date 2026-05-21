@@ -21,6 +21,7 @@ function buildSplit(overrides: Partial<DraftSplit> = {}): DraftSplit {
     tipCents: overrides.tipCents ?? 0,
     taxAllocationMode: overrides.taxAllocationMode ?? "proportional",
     tipAllocationMode: overrides.tipAllocationMode ?? "proportional",
+    paidParticipantIds: overrides.paidParticipantIds ?? [],
     updatedAt: overrides.updatedAt ?? "2026-03-29T00:00:00.000Z",
   };
 }

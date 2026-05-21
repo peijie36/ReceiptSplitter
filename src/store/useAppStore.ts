@@ -18,6 +18,7 @@ import {
   touchDraft,
 } from "@/utils/draft";
 import { createId } from "@/utils/id";
+import { getOwedParticipantIds, prunePaidParticipantIds } from "@/utils/repaymentStatus";
 import {
   getDraftValidationErrors,
   normalizeName,
@@ -54,6 +55,7 @@ type AppStore = {
   saveDraft: () => SaveDraftResult;
   loadSavedSplitToDraft: (splitId: string) => ActionResult;
   deleteSavedSplit: (splitId: string) => void;
+  toggleSavedSplitParticipantPaid: (splitId: string, participantId: string) => ActionResult;
   setLocalEditorIssue: (key: string, error?: string) => void;
   clearLocalEditorIssues: () => void;
 };
@@ -64,6 +66,10 @@ function success(): ActionResult {
 
 function failure(error: string): ActionResult {
   return { ok: false, error };
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function getParticipantRemovalError(draft: DraftSplit, participantId: string) {
@@ -399,6 +405,44 @@ export const useAppStore = create<AppStore>()(
           savedSplits: state.savedSplits.filter((split) => split.id !== splitId),
         }));
       },
+      toggleSavedSplitParticipantPaid: (splitId, participantId) => {
+        const split = get().savedSplits.find((savedSplit) => savedSplit.id === splitId);
+
+        if (!split) {
+          return failure("That saved split no longer exists.");
+        }
+
+        const owedParticipantIds = getOwedParticipantIds(split);
+
+        if (!owedParticipantIds.includes(participantId)) {
+          return failure("Only participants who owe the payer can be marked paid.");
+        }
+
+        const currentPaidParticipantIds = prunePaidParticipantIds(split);
+        const currentPaidParticipantIdSet = new Set(currentPaidParticipantIds);
+
+        if (currentPaidParticipantIdSet.has(participantId)) {
+          currentPaidParticipantIdSet.delete(participantId);
+        } else {
+          currentPaidParticipantIdSet.add(participantId);
+        }
+
+        const nextPaidParticipantIds = owedParticipantIds.filter((owedParticipantId) =>
+          currentPaidParticipantIdSet.has(owedParticipantId),
+        );
+
+        const updatedSplit = {
+          ...split,
+          paidParticipantIds: nextPaidParticipantIds,
+          updatedAt: nowIso(),
+        };
+
+        set((state) => ({
+          savedSplits: [updatedSplit, ...state.savedSplits.filter((savedSplit) => savedSplit.id !== splitId)],
+        }));
+
+        return success();
+      },
       setLocalEditorIssue: (key, error) => {
         set((state) => {
           const nextIssues = { ...state.localEditorIssues };
@@ -422,12 +466,38 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: "receipt-splitter-store",
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         draft: state.draft,
         savedSplits: state.savedSplits,
       }),
+      migrate: (persistedState) => {
+        const state = persistedState as Partial<Pick<AppStore, "draft" | "savedSplits">>;
+
+        return {
+          ...state,
+          draft: state.draft
+            ? {
+                ...createEmptyDraft(),
+                ...state.draft,
+                sourceSplitId: state.draft.sourceSplitId ?? null,
+                paidParticipantIds: state.draft.paidParticipantIds ?? [],
+              }
+            : createEmptyDraft(),
+          savedSplits: (state.savedSplits ?? []).map((split) => {
+            const splitWithPaidParticipantIds = {
+              ...split,
+              paidParticipantIds: split.paidParticipantIds ?? [],
+            };
+
+            return {
+              ...splitWithPaidParticipantIds,
+              paidParticipantIds: prunePaidParticipantIds(splitWithPaidParticipantIds),
+            };
+          }),
+        };
+      },
     },
   ),
 );

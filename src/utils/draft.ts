@@ -1,5 +1,6 @@
 import type { DraftSplit, SavedSplit } from "@/types/split";
 import { createId } from "@/utils/id";
+import { prunePaidParticipantIds } from "@/utils/repaymentStatus";
 
 function nowIso() {
   return new Date().toISOString();
@@ -19,6 +20,7 @@ export function createEmptyDraft(): DraftSplit {
     tipCents: 0,
     taxAllocationMode: "proportional",
     tipAllocationMode: "proportional",
+    paidParticipantIds: [],
     updatedAt: nowIso(),
   };
 }
@@ -68,13 +70,18 @@ export function createSnapshotFromDraft(draft: DraftSplit, existingSplit?: Saved
 
   const { sourceSplitId: _sourceSplitId, ...savedFields } = draft;
 
-  return {
+  const snapshot: SavedSplit = {
     ...savedFields,
     id: existingSplit?.id ?? createId(),
     title: getSavedSplitTitle(draft.title, timestamp),
     payerId: draft.payerId,
     createdAt: existingSplit?.createdAt ?? timestamp,
     updatedAt: timestamp,
+  };
+
+  return {
+    ...snapshot,
+    paidParticipantIds: prunePaidParticipantIds(snapshot),
   };
 }
 
@@ -138,6 +145,7 @@ export function createDraftFromSavedSplit(split: SavedSplit): DraftSplit {
     tipCents: split.tipCents,
     taxAllocationMode: split.taxAllocationMode,
     tipAllocationMode: split.tipAllocationMode,
+    paidParticipantIds: [...split.paidParticipantIds],
     updatedAt: nowIso(),
   };
 }

@@ -22,6 +22,7 @@ function buildSavedSplit(overrides: Partial<SavedSplit> = {}): SavedSplit {
     tipCents: 0,
     taxAllocationMode: "proportional",
     tipAllocationMode: "proportional",
+    paidParticipantIds: [],
     createdAt: "2026-05-16T20:30:00.000Z",
     updatedAt: "2026-05-16T20:30:00.000Z",
     ...overrides,

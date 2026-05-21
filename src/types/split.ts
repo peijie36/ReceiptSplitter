@@ -26,6 +26,7 @@ export type DraftSplit = {
   tipCents: number;
   taxAllocationMode: AllocationMode;
   tipAllocationMode: AllocationMode;
+  paidParticipantIds: string[];
   updatedAt: string;
 };
 

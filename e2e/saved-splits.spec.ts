@@ -39,3 +39,24 @@ test("views, edits, and deletes a saved split", async ({ page }) => {
   await expect(page.getByRole("button", { name: "View" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Delete" })).toHaveCount(0);
 });
+
+test("tracks paid participants and marks a saved split completed", async ({ page }) => {
+  await createBasicItemizedSplit(page, "Repayment dinner");
+  await saveSplit(page);
+
+  await page.getByRole("button", { name: "Mark Blair as paid" }).click();
+  await expect(page.getByRole("button", { name: "Mark Blair as unpaid" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("1/2 paid")).toBeVisible();
+
+  await page.getByRole("button", { name: "Mark Casey as paid" }).click();
+  await expect(page.getByRole("button", { name: "Mark Casey as unpaid" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Completed")).toBeVisible();
+
+  await page.getByRole("link", { name: /back to saved splits/i }).click();
+  await expect(page.getByText("Repayment dinner")).toBeVisible();
+  await expect(page.getByText("Completed")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText("Repayment dinner")).toBeVisible();
+  await expect(page.getByText("Completed")).toBeVisible();
+});
