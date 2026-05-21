@@ -126,7 +126,7 @@ export function HomePage() {
           <History className="h-5 w-5 text-muted-foreground" />
           <div>
             <h2 className="text-xl font-semibold">Recent saved splits</h2>
-            <p className="text-sm text-muted-foreground">Immutable snapshots sorted most recent first.</p>
+            <p className="text-sm text-muted-foreground">Saved splits sorted most recent updated first.</p>
           </div>
         </div>
 
@@ -165,7 +165,7 @@ export function HomePage() {
                           void navigate({ to: "/split/new" });
                         }}
                       >
-                        Edit copy
+                        Edit
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>

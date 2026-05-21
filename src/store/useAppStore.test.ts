@@ -18,6 +18,10 @@ describe("useAppStore", () => {
     resetStore();
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("persists the current draft and can rehydrate it", async () => {
     useAppStore.getState().setDraftTitle("Lunch run");
     useAppStore.getState().addParticipant("Alex");
@@ -44,7 +48,7 @@ describe("useAppStore", () => {
     expect(useAppStore.getState().draft.items).toHaveLength(1);
   });
 
-  it("saves immutable snapshots and loads a copy back into the draft", () => {
+  it("saves snapshots and replaces a saved split loaded back into the draft", () => {
     const store = useAppStore.getState();
 
     store.setDraftTitle("Pizza night");
@@ -71,11 +75,77 @@ describe("useAppStore", () => {
 
     const loadResult = useAppStore.getState().loadSavedSplitToDraft(savedSplit.id);
     expect(loadResult.ok).toBe(true);
-    expect(useAppStore.getState().draft.id).not.toBe(savedSplit.id);
+    expect(useAppStore.getState().draft.sourceSplitId).toBe(savedSplit.id);
     expect(useAppStore.getState().draft.title).toBe(savedSplit.title);
 
-    useAppStore.getState().setDraftTitle("Changed copy");
-    expect(useAppStore.getState().savedSplits[0].title).toBe("Pizza night");
+    useAppStore.getState().setDraftTitle("Changed split");
+    const updateResult = useAppStore.getState().saveDraft();
+
+    expect(updateResult.ok).toBe(true);
+    expect(updateResult.splitId).toBe(savedSplit.id);
+    expect(useAppStore.getState().savedSplits).toHaveLength(1);
+    expect(useAppStore.getState().savedSplits[0].id).toBe(savedSplit.id);
+    expect(useAppStore.getState().savedSplits[0].createdAt).toBe(savedSplit.createdAt);
+    expect(useAppStore.getState().savedSplits[0].title).toBe("Changed split");
+  });
+
+  it("does not replace a saved split when the loaded draft has no meaningful changes", () => {
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Pizza night");
+    store.addParticipant("Alex");
+    const payerId = useAppStore.getState().draft.participants[0]?.id ?? "";
+    store.addItem({
+      name: "Large pizza",
+      amountCents: 2400,
+      participantIds: [payerId],
+    });
+    const saveResult = store.saveDraft();
+    expect(saveResult.ok).toBe(true);
+
+    const savedSplit = useAppStore.getState().savedSplits[0];
+    const savedSplits = useAppStore.getState().savedSplits;
+    const loadResult = useAppStore.getState().loadSavedSplitToDraft(savedSplit.id);
+    expect(loadResult.ok).toBe(true);
+
+    const noOpSaveResult = useAppStore.getState().saveDraft();
+
+    expect(noOpSaveResult.ok).toBe(true);
+    expect(noOpSaveResult.splitId).toBe(savedSplit.id);
+    expect(useAppStore.getState().savedSplits).toBe(savedSplits);
+    expect(useAppStore.getState().savedSplits[0]).toBe(savedSplit);
+  });
+
+  it("preserves the original saved date and updates the modified date when replacing a changed saved split", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-21T12:00:00.000Z"));
+
+    const store = useAppStore.getState();
+
+    store.setDraftTitle("Pizza night");
+    store.addParticipant("Alex");
+    const payerId = useAppStore.getState().draft.participants[0]?.id ?? "";
+    store.addItem({
+      name: "Large pizza",
+      amountCents: 2400,
+      participantIds: [payerId],
+    });
+    const saveResult = store.saveDraft();
+    expect(saveResult.ok).toBe(true);
+
+    const savedSplit = useAppStore.getState().savedSplits[0];
+    useAppStore.getState().loadSavedSplitToDraft(savedSplit.id);
+    useAppStore.getState().setDraftTitle("Changed split");
+
+    vi.setSystemTime(new Date("2026-05-22T09:30:00.000Z"));
+    const updateResult = useAppStore.getState().saveDraft();
+
+    expect(updateResult.ok).toBe(true);
+    expect(useAppStore.getState().savedSplits[0].id).toBe(savedSplit.id);
+    expect(useAppStore.getState().savedSplits[0].createdAt).toBe("2026-05-21T12:00:00.000Z");
+    expect(useAppStore.getState().savedSplits[0].updatedAt).toBe("2026-05-22T09:30:00.000Z");
+
+    vi.useRealTimers();
   });
 
   it("refuses to save an invalid draft", () => {

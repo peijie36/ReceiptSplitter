@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await clearAppState(page);
 });
 
-test("views, edits a copy of, and deletes a saved split", async ({ page }) => {
+test("views, edits, and deletes a saved split", async ({ page }) => {
   await createBasicItemizedSplit(page, "Saved dinner");
   await saveSplit(page);
 
@@ -19,10 +19,17 @@ test("views, edits a copy of, and deletes a saved split", async ({ page }) => {
   await page.getByRole("button", { name: "View" }).click();
   await expect(page.getByRole("heading", { name: "Saved dinner" })).toBeVisible();
 
-  await page.getByRole("button", { name: /edit copy/i }).click();
+  await page.getByRole("button", { name: /^edit$/i }).click();
   await expect(page).toHaveURL(/\/split\/new$/);
   await expect(page.getByLabel("Split title")).toHaveValue("Saved dinner");
   await expect(page.getByText("Burger", { exact: true })).toBeVisible();
+
+  await page.getByLabel("Split title").fill("Updated dinner");
+  await saveSplit(page);
+  await page.getByRole("link", { name: /back to saved splits/i }).click();
+  await expect(page.getByText("Updated dinner")).toBeVisible();
+  await expect(page.getByText("Saved dinner")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "View" })).toHaveCount(1);
 
   await page.getByRole("link", { name: /ReceiptSplitter/ }).click();
   await page.getByRole("button", { name: "Delete" }).click();

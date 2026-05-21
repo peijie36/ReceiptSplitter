@@ -10,7 +10,13 @@ import type {
   SavedSplit,
   SplitMode,
 } from "@/types/split";
-import { createDraftFromSavedSplit, createEmptyDraft, createSnapshotFromDraft, touchDraft } from "@/utils/draft";
+import {
+  createDraftFromSavedSplit,
+  createEmptyDraft,
+  createSnapshotFromDraft,
+  hasSavedSplitChanges,
+  touchDraft,
+} from "@/utils/draft";
 import { createId } from "@/utils/id";
 import {
   getDraftValidationErrors,
@@ -337,11 +343,36 @@ export const useAppStore = create<AppStore>()(
           };
         }
 
-        const snapshot = createSnapshotFromDraft(draft);
+        const existingSplit = draft.sourceSplitId
+          ? get().savedSplits.find((savedSplit) => savedSplit.id === draft.sourceSplitId)
+          : undefined;
+
+        if (draft.sourceSplitId && !existingSplit) {
+          return {
+            ok: false,
+            error: "That saved split no longer exists.",
+          };
+        }
+
+        if (existingSplit && !hasSavedSplitChanges(draft, existingSplit)) {
+          set({
+            draft: createEmptyDraft(),
+            localEditorIssues: {},
+          });
+
+          return {
+            ok: true,
+            splitId: existingSplit.id,
+          };
+        }
+
+        const snapshot = createSnapshotFromDraft(draft, existingSplit);
 
         set((state) => ({
           draft: createEmptyDraft(),
-          savedSplits: [snapshot, ...state.savedSplits],
+          savedSplits: existingSplit
+            ? [snapshot, ...state.savedSplits.filter((savedSplit) => savedSplit.id !== existingSplit.id)]
+            : [snapshot, ...state.savedSplits],
         }));
 
         return {

@@ -73,7 +73,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
           }}
         >
           <PencilLine className="h-4 w-4" />
-          Edit copy
+          Edit
         </Button>
       </div>
 

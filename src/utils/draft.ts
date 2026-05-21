@@ -8,6 +8,7 @@ function nowIso() {
 export function createEmptyDraft(): DraftSplit {
   return {
     id: createId(),
+    sourceSplitId: null,
     title: "",
     payerId: null,
     splitMode: "itemized",
@@ -58,26 +59,72 @@ export function getSavedSplitTitle(title: string, createdAt: string) {
   return `Receipt split ${formatter.format(new Date(createdAt))}`;
 }
 
-export function createSnapshotFromDraft(draft: DraftSplit): SavedSplit {
+export function createSnapshotFromDraft(draft: DraftSplit, existingSplit?: SavedSplit): SavedSplit {
   const timestamp = nowIso();
 
   if (!draft.payerId) {
     throw new Error("Cannot save a draft without a payer.");
   }
 
+  const { sourceSplitId: _sourceSplitId, ...savedFields } = draft;
+
   return {
-    ...draft,
-    id: createId(),
+    ...savedFields,
+    id: existingSplit?.id ?? createId(),
     title: getSavedSplitTitle(draft.title, timestamp),
     payerId: draft.payerId,
-    createdAt: timestamp,
+    createdAt: existingSplit?.createdAt ?? timestamp,
     updatedAt: timestamp,
   };
+}
+
+function areStringArraysEqual(first: string[], second: string[]) {
+  return first.length === second.length && first.every((value, index) => value === second[index]);
+}
+
+export function hasSavedSplitChanges(draft: DraftSplit, split: SavedSplit) {
+  const title = draft.title.trim();
+
+  if (
+    title !== split.title ||
+    draft.payerId !== split.payerId ||
+    draft.splitMode !== split.splitMode ||
+    draft.billSubtotalCents !== split.billSubtotalCents ||
+    draft.taxCents !== split.taxCents ||
+    draft.tipCents !== split.tipCents ||
+    draft.taxAllocationMode !== split.taxAllocationMode ||
+    draft.tipAllocationMode !== split.tipAllocationMode ||
+    draft.participants.length !== split.participants.length ||
+    draft.items.length !== split.items.length
+  ) {
+    return true;
+  }
+
+  const participantsMatch = draft.participants.every((participant, index) => {
+    const savedParticipant = split.participants[index];
+    return participant.id === savedParticipant.id && participant.name === savedParticipant.name;
+  });
+
+  if (!participantsMatch) {
+    return true;
+  }
+
+  return draft.items.some((item, index) => {
+    const savedItem = split.items[index];
+
+    return (
+      item.id !== savedItem.id ||
+      item.name !== savedItem.name ||
+      item.amountCents !== savedItem.amountCents ||
+      !areStringArraysEqual(item.participantIds, savedItem.participantIds)
+    );
+  });
 }
 
 export function createDraftFromSavedSplit(split: SavedSplit): DraftSplit {
   return {
     id: createId(),
+    sourceSplitId: split.id,
     title: split.title,
     payerId: split.payerId,
     participants: split.participants.map((participant) => ({ ...participant })),

@@ -10,6 +10,7 @@ function buildSplit(overrides: Partial<DraftSplit> = {}): DraftSplit {
 
   return {
     id: "draft-1",
+    sourceSplitId: overrides.sourceSplitId ?? null,
     title: "Dinner",
     payerId: "payer",
     splitMode: overrides.splitMode ?? "itemized",

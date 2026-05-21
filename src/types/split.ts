@@ -15,6 +15,7 @@ export type Item = {
 
 export type DraftSplit = {
   id: string;
+  sourceSplitId: string | null;
   title: string;
   payerId: string | null;
   splitMode: SplitMode;
@@ -28,7 +29,7 @@ export type DraftSplit = {
   updatedAt: string;
 };
 
-export type SavedSplit = Omit<DraftSplit, "payerId"> & {
+export type SavedSplit = Omit<DraftSplit, "payerId" | "sourceSplitId"> & {
   payerId: string;
   createdAt: string;
   updatedAt: string;
