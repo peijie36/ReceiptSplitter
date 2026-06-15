@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Check, Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,12 @@ export function ParticipantAssignmentChips({
   selectedParticipantIds,
   onSelectedParticipantIdsChange,
 }: ParticipantAssignmentChipsProps) {
-  const orderedSelectedParticipantIds = orderParticipantIds(participants, selectedParticipantIds);
-  const selectedIds = new Set(orderedSelectedParticipantIds);
-  const allParticipantIds = participants.map((participant) => participant.id);
+  const orderedSelectedParticipantIds = useMemo(
+    () => orderParticipantIds(participants, selectedParticipantIds),
+    [participants, selectedParticipantIds],
+  );
+  const selectedIds = useMemo(() => new Set(orderedSelectedParticipantIds), [orderedSelectedParticipantIds]);
+  const allParticipantIds = useMemo(() => participants.map((participant) => participant.id), [participants]);
   const allSelected = participants.length > 0 && participants.every((participant) => selectedIds.has(participant.id));
 
   function handleToggle(participantId: string) {

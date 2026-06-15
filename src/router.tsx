@@ -1,9 +1,12 @@
-import { RouterProvider, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import {
+  RouterProvider,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from "@tanstack/react-router";
 
 import { AppShell } from "@/components/layout/AppShell";
-import { HomePage } from "@/routes/HomePage";
-import { SavedSplitPage } from "@/routes/SavedSplitPage";
-import { SplitEditorPage } from "@/routes/SplitEditorPage";
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -12,22 +15,19 @@ const rootRoute = createRootRoute({
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: HomePage,
+  component: lazyRouteComponent(() => import("@/routes/HomePage"), "HomePage"),
 });
 
 const splitEditorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "split/new",
-  component: SplitEditorPage,
+  component: lazyRouteComponent(() => import("@/routes/SplitEditorPage"), "SplitEditorPage"),
 });
 
 const savedSplitRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "split/$splitId",
-  component: function SavedSplitRouteComponent() {
-    const { splitId } = savedSplitRoute.useParams();
-    return <SavedSplitPage splitId={splitId} />;
-  },
+  component: lazyRouteComponent(() => import("@/routes/SavedSplitRoute"), "SavedSplitRoute"),
 });
 
 const routeTree = rootRoute.addChildren([homeRoute, splitEditorRoute, savedSplitRoute]);

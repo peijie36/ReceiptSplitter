@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ParticipantAssignmentChips } from "@/components/split/ParticipantAssignmentChips";
-import { useItemEditorModel } from "@/store/splitEditorModel";
+import { useItemActionsModel, useItemEditorModel } from "@/store/splitEditorModel";
 import type { Item, Participant } from "@/types/split";
 import { formatCurrency, formatMoneyInput, normalizeMoneyInput, parseMoneyInput } from "@/utils/money";
 
@@ -33,7 +33,7 @@ type ExistingItemEditorProps = {
 };
 
 function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEditorProps) {
-  const { updateItem, removeItem, setItemIssue } = useItemEditorModel();
+  const { updateItem, removeItem, setItemIssue } = useItemActionsModel();
 
   const [state, setState] = useState<ItemFormState>(buildFormState(item));
   const [error, setError] = useState<string | null>(null);

@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, ChevronUp, Receipt, Wallet } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useDraftSummaryModel } from "@/store/splitEditorModel";
+import type { DraftSummaryReadModel } from "@/utils/draftSummary";
 import type { ParticipantTotals, SplitCalculationResult } from "@/types/split";
 import { formatCurrency } from "@/utils/money";
 
@@ -71,12 +71,17 @@ function PersonSummaryRow({ participant, label, amountCents, expanded, onToggle 
 function SummaryContent({ validationErrors, totals, compact = false }: SummaryContentProps) {
   const [expandedParticipantIds, setExpandedParticipantIds] = useState<string[]>([]);
   const payerTotal = totals.participantTotals.find((participant) => participant.isPayer);
-  const participantTotalsById = new Map(
-    totals.participantTotals.map((participant) => [participant.participantId, participant]),
+  const participantTotalsById = useMemo(
+    () => new Map(totals.participantTotals.map((participant) => [participant.participantId, participant])),
+    [totals.participantTotals],
   );
-  const owedParticipantTotals = totals.owedSummary
-    .map((entry) => participantTotalsById.get(entry.participantId))
-    .filter((participant): participant is ParticipantTotals => Boolean(participant));
+  const owedParticipantTotals = useMemo(
+    () =>
+      totals.owedSummary
+        .map((entry) => participantTotalsById.get(entry.participantId))
+        .filter((participant): participant is ParticipantTotals => Boolean(participant)),
+    [participantTotalsById, totals.owedSummary],
+  );
 
   function toggleParticipantBreakdown(participantId: string) {
     setExpandedParticipantIds((current) =>
@@ -184,10 +189,11 @@ function SummaryContent({ validationErrors, totals, compact = false }: SummaryCo
 
 type SummarySectionProps = {
   className?: string;
+  summaryModel: DraftSummaryReadModel;
 };
 
-export function SummarySection({ className }: SummarySectionProps) {
-  const { validationErrors, summaryDescription, totals } = useDraftSummaryModel();
+export function SummarySection({ className, summaryModel }: SummarySectionProps) {
+  const { validationErrors, summaryDescription, totals } = summaryModel;
 
   return (
     <Card className={cn("sticky top-6 min-w-0 w-full", className)}>
@@ -204,12 +210,13 @@ export function SummarySection({ className }: SummarySectionProps) {
 
 type MobileSummaryDockProps = {
   actions?: ReactNode;
+  summaryModel: DraftSummaryReadModel;
 };
 
-export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
+export function MobileSummaryDock({ actions, summaryModel }: MobileSummaryDockProps) {
   const [isOpen, setIsOpen] = useState(false);
   const summaryDockContentId = "mobile-summary-dock-content";
-  const { validationErrors, summaryDescription, totals } = useDraftSummaryModel();
+  const { validationErrors, summaryDescription, totals } = summaryModel;
   const issueLabel =
     validationErrors.length === 1 ? "1 issue to fix" : `${validationErrors.length} issues to fix`;
   const summaryButtonLabel = `Live summary, ${

@@ -20,7 +20,7 @@ import { ItemSection } from "@/components/split/ItemSection";
 import { ParticipantSection } from "@/components/split/ParticipantSection";
 import { MobileSummaryDock, SummarySection } from "@/components/split/SummarySection";
 import { useAppStore } from "@/store/useAppStore";
-import { useDraftSummaryModel } from "@/store/splitEditorModel";
+import { useDraftSummaryModel, useSplitHeaderModel } from "@/store/splitEditorModel";
 import type { SplitMode } from "@/types/split";
 
 function formatDraftSavedAt(isoDate: string) {
@@ -69,11 +69,9 @@ function DraftActions({ canSave, onReset, onSave, className, buttonClassName }: 
 
 export function SplitEditorPage() {
   const navigate = useNavigate();
-  const draft = useAppStore((state) => state.draft);
-  const setDraftTitle = useAppStore((state) => state.setDraftTitle);
-  const setSplitMode = useAppStore((state) => state.setSplitMode);
   const saveDraft = useAppStore((state) => state.saveDraft);
   const resetDraft = useAppStore((state) => state.resetDraft);
+  const { draft, setDraftTitle, setSplitMode } = useSplitHeaderModel();
   const summaryModel = useDraftSummaryModel();
 
   function handleSave() {
@@ -155,9 +153,10 @@ export function SplitEditorPage() {
           <ItemSection />
           <ChargeSection />
         </div>
-        <SummarySection className="hidden w-full xl:block" />
+        <SummarySection className="hidden w-full xl:block" summaryModel={summaryModel} />
       </div>
       <MobileSummaryDock
+        summaryModel={summaryModel}
         actions={
           <DraftActions
             canSave={summaryModel.canSave}

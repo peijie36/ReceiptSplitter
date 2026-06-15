@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowLeft, Check, CheckCircle2, Copy, PencilLine } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,6 +29,7 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
   const split = useAppStore((state) => state.savedSplits.find((entry) => entry.id === splitId));
   const loadSavedSplitToDraft = useAppStore((state) => state.loadSavedSplitToDraft);
   const toggleSavedSplitParticipantPaid = useAppStore((state) => state.toggleSavedSplitParticipantPaid);
+  const splitModel = useMemo(() => (split ? buildSavedSplitReadModel(split) : null), [split]);
 
   if (!split) {
     return (
@@ -41,13 +42,16 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
     );
   }
 
-  const savedSplit = split;
-  const splitModel = buildSavedSplitReadModel(savedSplit);
+  if (!splitModel) {
+    return null;
+  }
+
   const { totals, repaymentStatus, paidParticipantIdSet } = splitModel;
+  const { paymentSummaryText } = splitModel;
 
   async function handleCopyPaymentSummary() {
     try {
-      await navigator.clipboard.writeText(splitModel.paymentSummaryText);
+      await navigator.clipboard.writeText(paymentSummaryText);
       setCopyStatus("copied");
     } catch {
       setCopyStatus("error");
