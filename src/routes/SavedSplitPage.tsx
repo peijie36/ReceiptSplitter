@@ -10,9 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { formatCurrency } from "@/utils/money";
-import { buildPaymentSummaryText } from "@/utils/paymentSummary";
-import { getRepaymentStatus } from "@/utils/repaymentStatus";
-import { calculateFinalTotals, getItemParticipantNames } from "@/utils/splitCalculations";
+import { buildSavedSplitReadModel } from "@/utils/savedSplitReadModel";
 
 type SavedSplitPageProps = {
   splitId: string;
@@ -44,13 +42,12 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
   }
 
   const savedSplit = split;
-  const totals = calculateFinalTotals(savedSplit);
-  const repaymentStatus = getRepaymentStatus(savedSplit);
-  const paidParticipantIdSet = new Set(repaymentStatus.paidParticipantIds);
+  const splitModel = buildSavedSplitReadModel(savedSplit);
+  const { totals, repaymentStatus, paidParticipantIdSet } = splitModel;
 
   async function handleCopyPaymentSummary() {
     try {
-      await navigator.clipboard.writeText(buildPaymentSummaryText(savedSplit));
+      await navigator.clipboard.writeText(splitModel.paymentSummaryText);
       setCopyStatus("copied");
     } catch {
       setCopyStatus("error");
@@ -102,13 +99,13 @@ export function SavedSplitPage({ splitId }: SavedSplitPageProps) {
               ) : (
                 <ScrollArea className="max-h-[420px]">
                   <div className="space-y-3 pr-3">
-                    {split.items.map((item) => (
+                    {splitModel.itemSummaries.map((item) => (
                       <div key={item.id} className="rounded-xl border border-border/80 bg-background/70 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="break-words font-medium">{item.name}</div>
                             <div className="mt-1 text-sm text-muted-foreground">
-                              {getItemParticipantNames(item, split.participants).join(", ")}
+                              {item.participantNames.join(", ")}
                             </div>
                           </div>
                           <div className="shrink-0 text-lg font-semibold">{formatCurrency(item.amountCents)}</div>

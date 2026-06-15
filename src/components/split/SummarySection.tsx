@@ -1,43 +1,19 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, ChevronUp, Receipt, Wallet } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/store/useAppStore";
-import type { DraftSplit, ParticipantTotals, SplitCalculationResult } from "@/types/split";
-import { getDraftValidationErrors } from "@/utils/draftValidation";
+import { useDraftSummaryModel } from "@/store/splitEditorModel";
+import type { ParticipantTotals, SplitCalculationResult } from "@/types/split";
 import { formatCurrency } from "@/utils/money";
-import { calculateFinalTotals } from "@/utils/splitCalculations";
 
 type SummaryContentProps = {
   validationErrors: string[];
   totals: SplitCalculationResult;
   compact?: boolean;
 };
-
-function useSummaryData() {
-  const draft = useAppStore((state) => state.draft);
-  const localEditorIssues = useAppStore((state) => state.localEditorIssues);
-  const validationErrors = useMemo(
-    () => [...getDraftValidationErrors(draft), ...Object.values(localEditorIssues)],
-    [draft, localEditorIssues],
-  );
-  const totals = useMemo(() => calculateFinalTotals(draft), [draft]);
-
-  return {
-    draft,
-    validationErrors,
-    totals,
-  };
-}
-
-function getSummaryDescription(draft: DraftSplit) {
-  return draft.splitMode === "equal"
-    ? "Bill is split evenly in cents."
-    : "Totals reconcile to the cent.";
-}
 
 type PersonSummaryRowProps = {
   participant: ParticipantTotals;
@@ -211,13 +187,13 @@ type SummarySectionProps = {
 };
 
 export function SummarySection({ className }: SummarySectionProps) {
-  const { draft, validationErrors, totals } = useSummaryData();
+  const { validationErrors, summaryDescription, totals } = useDraftSummaryModel();
 
   return (
     <Card className={cn("sticky top-6 min-w-0 w-full", className)}>
       <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-3">
         <CardTitle>Live summary</CardTitle>
-        <CardDescription>{getSummaryDescription(draft)}</CardDescription>
+        <CardDescription>{summaryDescription}</CardDescription>
       </CardHeader>
       <CardContent className="min-w-0 p-4 pt-0 sm:p-5 sm:pt-0">
         <SummaryContent validationErrors={validationErrors} totals={totals} />
@@ -233,11 +209,11 @@ type MobileSummaryDockProps = {
 export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
   const [isOpen, setIsOpen] = useState(false);
   const summaryDockContentId = "mobile-summary-dock-content";
-  const { draft, validationErrors, totals } = useSummaryData();
+  const { validationErrors, summaryDescription, totals } = useDraftSummaryModel();
   const issueLabel =
     validationErrors.length === 1 ? "1 issue to fix" : `${validationErrors.length} issues to fix`;
   const summaryButtonLabel = `Live summary, ${
-    validationErrors.length > 0 ? issueLabel : getSummaryDescription(draft)
+    validationErrors.length > 0 ? issueLabel : summaryDescription
   }, grand total ${formatCurrency(totals.grandTotalCents)}`;
 
   return (
@@ -272,7 +248,7 @@ export function MobileSummaryDock({ actions }: MobileSummaryDockProps) {
             <span className="min-w-0">
               <span className="block text-sm font-medium">Live summary</span>
               <span className="block truncate text-xs text-muted-foreground">
-                {validationErrors.length > 0 ? issueLabel : getSummaryDescription(draft)}
+                {validationErrors.length > 0 ? issueLabel : summaryDescription}
               </span>
             </span>
             <span className="flex shrink-0 items-center gap-3">

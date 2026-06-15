@@ -18,8 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAppStore } from "@/store/useAppStore";
 import { hasDraftContent } from "@/utils/draft";
 import { formatCurrency } from "@/utils/money";
-import { getRepaymentStatus } from "@/utils/repaymentStatus";
-import { getSavedSplitTotal } from "@/utils/splitCalculations";
+import { buildSavedSplitReadModel } from "@/utils/savedSplitReadModel";
 
 function formatSavedDate(isoDate: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -141,7 +140,7 @@ export function HomePage() {
           <ScrollArea className="max-h-[540px] rounded-2xl">
             <div className="space-y-4 pr-3">
               {savedSplits.map((split) => {
-                const repaymentStatus = getRepaymentStatus(split);
+                const splitModel = buildSavedSplitReadModel(split);
 
                 return (
                   <Card key={split.id}>
@@ -151,20 +150,20 @@ export function HomePage() {
                           <div className="text-lg font-semibold">{split.title}</div>
                           <span
                             className={
-                              repaymentStatus.isCompleted
+                              splitModel.repaymentStatus.isCompleted
                                 ? "inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
                                 : "inline-flex items-center rounded-full border border-border bg-secondary/60 px-2 py-0.5 text-xs font-medium text-muted-foreground"
                             }
                           >
-                            {repaymentStatus.isCompleted ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
-                            {repaymentStatus.isCompleted
+                            {splitModel.repaymentStatus.isCompleted ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+                            {splitModel.repaymentStatus.isCompleted
                               ? "Completed"
-                              : `${repaymentStatus.paidCount}/${repaymentStatus.owedCount} paid`}
+                              : `${splitModel.repaymentStatus.paidCount}/${splitModel.repaymentStatus.owedCount} paid`}
                           </span>
                         </div>
                         <div className="mt-1 text-sm text-muted-foreground">
                           Saved {formatSavedDate(split.createdAt)} | {split.participants.length} participants |{" "}
-                          {formatCurrency(getSavedSplitTotal(split))}
+                          {formatCurrency(splitModel.totalCents)}
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">

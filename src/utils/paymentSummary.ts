@@ -1,4 +1,4 @@
-import type { SavedSplit } from "@/types/split";
+import type { SavedSplit, SplitCalculationResult } from "@/types/split";
 import { formatCurrency } from "@/utils/money";
 import { calculateFinalTotals } from "@/utils/splitCalculations";
 
@@ -9,8 +9,7 @@ function formatPaymentSummaryDate(isoDate: string) {
   }).format(new Date(isoDate));
 }
 
-export function buildPaymentSummaryText(split: SavedSplit) {
-  const totals = calculateFinalTotals(split);
+export function buildPaymentSummaryTextFromTotals(split: SavedSplit, totals: SplitCalculationResult) {
   const payerName =
     totals.participantTotals.find((participant) => participant.isPayer)?.participantName ?? "the payer";
   const title = `${split.title} - ${formatPaymentSummaryDate(split.createdAt)}`;
@@ -27,4 +26,8 @@ export function buildPaymentSummaryText(split: SavedSplit) {
       (entry) => `${entry.participantName} owes ${payerName} ${formatCurrency(entry.owedCents)}`,
     ),
   ].join("\n");
+}
+
+export function buildPaymentSummaryText(split: SavedSplit) {
+  return buildPaymentSummaryTextFromTotals(split, calculateFinalTotals(split));
 }

@@ -7,16 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAppStore } from "@/store/useAppStore";
+import { useParticipantEditorModel } from "@/store/splitEditorModel";
 import { normalizeName } from "@/utils/draftValidation";
 
 export function ParticipantSection() {
-  const draft = useAppStore((state) => state.draft);
-  const addParticipant = useAppStore((state) => state.addParticipant);
-  const updateParticipantName = useAppStore((state) => state.updateParticipantName);
-  const removeParticipant = useAppStore((state) => state.removeParticipant);
-  const setPayer = useAppStore((state) => state.setPayer);
-  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
+  const {
+    draft,
+    addParticipant,
+    updateParticipantName,
+    removeParticipant,
+    setPayer,
+    setParticipantIssue,
+  } = useParticipantEditorModel();
 
   const [newParticipantName, setNewParticipantName] = useState("");
   const [participantDrafts, setParticipantDrafts] = useState<Record<string, string>>({});
@@ -54,12 +56,11 @@ export function ParticipantSection() {
   function handleParticipantBlur(participantId: string, currentName: string) {
     const nextName = participantDrafts[participantId] ?? "";
     const normalizedNextName = normalizeName(nextName);
-    const issueKey = `participant:${participantId}`;
 
     if (normalizedNextName === currentName) {
       updateParticipantDraft(participantId, currentName);
       setError(null);
-      setLocalEditorIssue(issueKey);
+      setParticipantIssue(participantId);
       return;
     }
 
@@ -68,13 +69,13 @@ export function ParticipantSection() {
     if (!result.ok) {
       const message = result.error ?? "Unable to update participant.";
       setError(message);
-      setLocalEditorIssue(issueKey, message);
+      setParticipantIssue(participantId, message);
       return;
     }
 
     updateParticipantDraft(participantId, normalizedNextName);
     setError(null);
-    setLocalEditorIssue(issueKey);
+    setParticipantIssue(participantId);
   }
 
   function handleRemoveParticipant(participantId: string) {
@@ -86,7 +87,7 @@ export function ParticipantSection() {
     }
 
     setError(null);
-    setLocalEditorIssue(`participant:${participantId}`);
+    setParticipantIssue(participantId);
   }
 
   function handleSetPayer(participantId: string) {
@@ -162,7 +163,7 @@ export function ParticipantSection() {
                       onChange={(event) => {
                         updateParticipantDraft(participant.id, event.target.value);
                         setError(null);
-                        setLocalEditorIssue(`participant:${participant.id}`);
+                        setParticipantIssue(participant.id);
                       }}
                       onBlur={() => handleParticipantBlur(participant.id, participant.name)}
                       onKeyDown={(event) => {

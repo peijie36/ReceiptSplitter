@@ -1,4 +1,4 @@
-import type { SavedSplit } from "@/types/split";
+import type { SavedSplit, SplitCalculationResult } from "@/types/split";
 import { calculateFinalTotals } from "@/utils/splitCalculations";
 
 export type RepaymentStatus = {
@@ -12,8 +12,11 @@ export function getOwedParticipantIds(split: SavedSplit) {
   return calculateFinalTotals(split).owedSummary.map((entry) => entry.participantId);
 }
 
-export function prunePaidParticipantIds(split: SavedSplit) {
-  const owedParticipantIds = getOwedParticipantIds(split);
+export function getOwedParticipantIdsFromTotals(totals: Pick<SplitCalculationResult, "owedSummary">) {
+  return totals.owedSummary.map((entry) => entry.participantId);
+}
+
+export function prunePaidParticipantIdsFromOwedIds(split: SavedSplit, owedParticipantIds: string[]) {
   const owedParticipantIdSet = new Set(owedParticipantIds);
   const paidParticipantIdSet = new Set(split.paidParticipantIds);
 
@@ -22,9 +25,16 @@ export function prunePaidParticipantIds(split: SavedSplit) {
   );
 }
 
-export function getRepaymentStatus(split: SavedSplit): RepaymentStatus {
-  const owedParticipantIds = getOwedParticipantIds(split);
-  const paidParticipantIds = prunePaidParticipantIds(split);
+export function prunePaidParticipantIds(split: SavedSplit) {
+  return prunePaidParticipantIdsFromOwedIds(split, getOwedParticipantIds(split));
+}
+
+export function getRepaymentStatusFromTotals(
+  split: SavedSplit,
+  totals: Pick<SplitCalculationResult, "owedSummary">,
+): RepaymentStatus {
+  const owedParticipantIds = getOwedParticipantIdsFromTotals(totals);
+  const paidParticipantIds = prunePaidParticipantIdsFromOwedIds(split, owedParticipantIds);
 
   return {
     paidParticipantIds,
@@ -32,4 +42,8 @@ export function getRepaymentStatus(split: SavedSplit): RepaymentStatus {
     owedCount: owedParticipantIds.length,
     isCompleted: paidParticipantIds.length === owedParticipantIds.length,
   };
+}
+
+export function getRepaymentStatus(split: SavedSplit): RepaymentStatus {
+  return getRepaymentStatusFromTotals(split, calculateFinalTotals(split));
 }

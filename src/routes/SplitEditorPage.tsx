@@ -20,8 +20,8 @@ import { ItemSection } from "@/components/split/ItemSection";
 import { ParticipantSection } from "@/components/split/ParticipantSection";
 import { MobileSummaryDock, SummarySection } from "@/components/split/SummarySection";
 import { useAppStore } from "@/store/useAppStore";
+import { useDraftSummaryModel } from "@/store/splitEditorModel";
 import type { SplitMode } from "@/types/split";
-import { getDraftValidationErrors } from "@/utils/draftValidation";
 
 function formatDraftSavedAt(isoDate: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -74,12 +74,7 @@ export function SplitEditorPage() {
   const setSplitMode = useAppStore((state) => state.setSplitMode);
   const saveDraft = useAppStore((state) => state.saveDraft);
   const resetDraft = useAppStore((state) => state.resetDraft);
-  const localEditorIssues = useAppStore((state) => state.localEditorIssues);
-
-  const validationErrors = [...getDraftValidationErrors(draft), ...Object.values(localEditorIssues)];
-  const canSave = validationErrors.length === 0;
-  const validationIssueLabel =
-    validationErrors.length === 1 ? "1 issue to fix before saving" : `${validationErrors.length} issues to fix before saving`;
+  const summaryModel = useDraftSummaryModel();
 
   function handleSave() {
     const result = saveDraft();
@@ -141,14 +136,14 @@ export function SplitEditorPage() {
         </div>
         <div className="space-y-2 lg:text-right">
           <DraftActions
-            canSave={canSave}
+            canSave={summaryModel.canSave}
             onReset={handleReset}
             onSave={handleSave}
             className="hidden gap-2 sm:flex sm:flex-wrap sm:justify-start lg:justify-end"
             buttonClassName="sm:w-auto"
           />
           <p className="text-xs text-muted-foreground">
-            {canSave ? "Ready to save" : validationIssueLabel} | Draft autosaved{" "}
+            {summaryModel.canSave ? "Ready to save" : summaryModel.issueLabel} | Draft autosaved{" "}
             {formatDraftSavedAt(draft.updatedAt)}
           </p>
         </div>
@@ -165,7 +160,7 @@ export function SplitEditorPage() {
       <MobileSummaryDock
         actions={
           <DraftActions
-            canSave={canSave}
+            canSave={summaryModel.canSave}
             onReset={handleReset}
             onSave={handleSave}
             className="contents"

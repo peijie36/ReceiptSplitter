@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAppStore } from "@/store/useAppStore";
+import { useChargeEditorModel } from "@/store/splitEditorModel";
 import type { AllocationMode } from "@/types/split";
 import { cn } from "@/lib/utils";
 import { formatMoneyInput } from "@/utils/money";
@@ -53,12 +53,15 @@ function AllocationModeToggle({
 }
 
 export function ChargeSection() {
-  const draft = useAppStore((state) => state.draft);
-  const setTaxCents = useAppStore((state) => state.setTaxCents);
-  const setTipCents = useAppStore((state) => state.setTipCents);
-  const setTaxAllocationMode = useAppStore((state) => state.setTaxAllocationMode);
-  const setTipAllocationMode = useAppStore((state) => state.setTipAllocationMode);
-  const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
+  const {
+    draft,
+    setTaxCents,
+    setTipCents,
+    setTaxAllocationMode,
+    setTipAllocationMode,
+    setTaxIssue,
+    setTipIssue,
+  } = useChargeEditorModel();
 
   const [taxInput, setTaxInput] = useState(formatMoneyInput(draft.taxCents, { emptyWhenZero: true }));
   const [tipInput, setTipInput] = useState(formatMoneyInput(draft.tipCents, { emptyWhenZero: true }));
@@ -87,7 +90,7 @@ export function ChargeSection() {
     if (cents === null) {
       const message = nextError ?? "Enter a valid tax amount.";
       setError(message);
-      setLocalEditorIssue("tax", message);
+      setTaxIssue(message);
       return;
     }
 
@@ -96,12 +99,12 @@ export function ChargeSection() {
     if (!result.ok) {
       const message = result.error ?? "Unable to set tax.";
       setError(message);
-      setLocalEditorIssue("tax", message);
+      setTaxIssue(message);
       return;
     }
 
     setError(null);
-    setLocalEditorIssue("tax");
+    setTaxIssue();
   }
 
   function handleTipChange(value: string, cents: number | null, nextError?: string) {
@@ -110,7 +113,7 @@ export function ChargeSection() {
     if (cents === null) {
       const message = nextError ?? "Enter a valid tip amount.";
       setError(message);
-      setLocalEditorIssue("tip", message);
+      setTipIssue(message);
       return;
     }
 
@@ -119,12 +122,12 @@ export function ChargeSection() {
     if (!result.ok) {
       const message = result.error ?? "Unable to set tip.";
       setError(message);
-      setLocalEditorIssue("tip", message);
+      setTipIssue(message);
       return;
     }
 
     setError(null);
-    setLocalEditorIssue("tip");
+    setTipIssue();
   }
 
   return (
@@ -154,7 +157,7 @@ export function ChargeSection() {
                 setFocusedChargeInput(null);
                 setTaxInput(formatMoneyInput(draft.taxCents, { emptyWhenZero: true }));
                 setError(null);
-                setLocalEditorIssue("tax");
+                setTaxIssue();
               }}
             />
           </div>
@@ -190,7 +193,7 @@ export function ChargeSection() {
                 setFocusedChargeInput(null);
                 setTipInput(formatMoneyInput(draft.tipCents, { emptyWhenZero: true }));
                 setError(null);
-                setLocalEditorIssue("tip");
+                setTipIssue();
               }}
             />
           </div>
