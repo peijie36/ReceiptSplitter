@@ -17,7 +17,11 @@ test("reviews, imports, and persists a scanned receipt", async ({ page }) => {
     buffer: Buffer.from("e2e receipt fixture"),
   });
 
-  await expect(page.getByLabel("Item 1")).toHaveValue("Latte");
+  const scanner = page.getByRole("dialog", { name: "Scan receipt" });
+
+  await expect(
+    scanner.getByRole("textbox", { name: "Item 1", exact: true }),
+  ).toHaveValue("Latte");
   await expect(page.getByLabel("Receipt tax")).toHaveValue("0.40");
 
   await page.getByRole("button", { name: "Assign Alex" }).click();
