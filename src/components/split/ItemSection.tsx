@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ParticipantAssignmentChips } from "@/components/split/ParticipantAssignmentChips";
 import { ReceiptScanner } from "@/features/receipt-scanning/components/ReceiptScanner";
+import { cn } from "@/lib/utils";
 import { useItemActionsModel, useItemEditorModel } from "@/store/useSplitEditor";
 import type { Item, Participant } from "@/types/split";
 import { formatCurrency, formatMoneyInput, normalizeMoneyInput, parseMoneyInput } from "@/utils/money";
@@ -38,6 +39,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
 
   const [state, setState] = useState<ItemFormState>(buildFormState(item));
   const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     setState(buildFormState(item));
@@ -53,6 +55,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
     if (parsed.cents === null) {
       const message = parsed.error ?? "Enter a valid item amount.";
       setError(message);
+      setIsExpanded(true);
       setItemIssue(item.id, message);
       return false;
     }
@@ -66,6 +69,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
     if (!result.ok) {
       const message = result.error ?? "Unable to update item.";
       setError(message);
+      setIsExpanded(true);
       setItemIssue(item.id, message);
       return false;
     }
@@ -86,6 +90,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
     if (participantIds.length === 0) {
       const message = "Assign this item to at least one participant before updating.";
       setError(message);
+      setIsExpanded(true);
       setItemIssue(item.id, message);
       return;
     }
@@ -104,19 +109,53 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
 
   const headerName = state.name.trim() || "Untitled item";
   const headerAmount = parseMoneyInput(state.amount).cents;
+  const editorId = `existing-item-editor-${item.id}`;
+  const assignedParticipantNames = participants
+    .filter((participant) => state.participantIds.includes(participant.id))
+    .map((participant) => participant.name)
+    .join(", ");
 
   return (
     <div className="min-w-0 overflow-hidden rounded-lg border border-border/80 bg-background/70">
-      <div className="flex min-w-0 items-end justify-between gap-3 border-b border-border/70 bg-secondary/30 px-3 py-2">
+      <div className="relative flex min-h-11 min-w-0 items-center justify-between gap-3 border-b border-border/70 bg-secondary/30 px-3 py-2">
         <div className="min-w-0">
           <div className="text-xs font-medium uppercase text-muted-foreground">Item {itemNumber}</div>
           <div className="truncate font-medium">{headerName}</div>
+          <div className="truncate text-xs text-muted-foreground md:hidden">
+            {assignedParticipantNames || "No participants assigned"}
+          </div>
         </div>
-        <div className="shrink-0 font-semibold tabular-nums">
-          {headerAmount === null ? formatCurrency(item.amountCents) : formatCurrency(headerAmount)}
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="font-semibold tabular-nums">
+            {headerAmount === null ? formatCurrency(item.amountCents) : formatCurrency(headerAmount)}
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn("h-4 w-4 transition-transform md:hidden", isExpanded ? "rotate-180" : null)}
+          />
         </div>
+        <button
+          type="button"
+          aria-label={`Edit item ${itemNumber}: ${headerName}`}
+          aria-expanded={isExpanded}
+          aria-controls={editorId}
+          onClick={() => {
+            if (error) {
+              return;
+            }
+
+            setIsExpanded((current) => !current);
+          }}
+          className="absolute inset-0 rounded-t-lg transition-colors hover:bg-secondary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring md:hidden"
+        />
       </div>
-      <div className="grid min-w-0 gap-2 p-2.5 sm:p-3 md:grid-cols-[minmax(0,1fr)_9rem]">
+      <div
+        id={editorId}
+        className={cn(
+          "min-w-0 gap-2 p-2.5 sm:p-3 md:grid md:grid-cols-[minmax(0,1fr)_9rem]",
+          isExpanded ? "grid" : "hidden",
+        )}
+      >
         <div className="space-y-2">
           <Label htmlFor={`item-name-${item.id}`}>Item</Label>
           <Input
