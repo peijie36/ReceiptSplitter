@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useParticipantEditorModel } from "@/store/splitEditorModel";
+import { useParticipantEditorModel } from "@/store/useSplitEditor";
 import { normalizeName } from "@/utils/draftValidation";
 
 export function ParticipantSection() {

@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     VitePWA({
@@ -56,8 +56,19 @@ export default defineConfig({
     }),
   ],
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      ...(mode === "e2e"
+        ? [
+            {
+              find: "@/features/receipt-scanning/scanReceipt",
+              replacement: path.resolve(__dirname, "./e2e/stubs/receiptScan.ts"),
+            },
+          ]
+        : []),
+      {
+        find: "@",
+        replacement: path.resolve(__dirname, "./src"),
+      },
+    ],
   },
-});
+}));

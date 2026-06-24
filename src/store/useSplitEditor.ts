@@ -72,7 +72,10 @@ export function useItemEditorModel() {
   const participants = useAppStore((state) => state.draft.participants);
   const items = useAppStore((state) => state.draft.items);
   const billSubtotalCents = useAppStore((state) => state.draft.billSubtotalCents);
+  const taxCents = useAppStore((state) => state.draft.taxCents);
+  const tipCents = useAppStore((state) => state.draft.tipCents);
   const addItem = useAppStore((state) => state.addItem);
+  const importReceipt = useAppStore((state) => state.importReceipt);
   const setBillSubtotalCents = useAppStore((state) => state.setBillSubtotalCents);
   const setLocalEditorIssue = useAppStore((state) => state.setLocalEditorIssue);
   const setBillSubtotalIssue = useCallback(
@@ -86,8 +89,11 @@ export function useItemEditorModel() {
       participants,
       items,
       billSubtotalCents,
+      taxCents,
+      tipCents,
     },
     addItem,
+    importReceipt,
     setBillSubtotalCents,
     setBillSubtotalIssue,
   };

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ParticipantAssignmentChips } from "@/components/split/ParticipantAssignmentChips";
-import { useItemActionsModel, useItemEditorModel } from "@/store/splitEditorModel";
+import { ReceiptScanner } from "@/features/receipt-scanning/components/ReceiptScanner";
+import { useItemActionsModel, useItemEditorModel } from "@/store/useSplitEditor";
 import type { Item, Participant } from "@/types/split";
 import { formatCurrency, formatMoneyInput, normalizeMoneyInput, parseMoneyInput } from "@/utils/money";
 
@@ -188,7 +189,7 @@ function ExistingItemEditor({ item, itemNumber, participants }: ExistingItemEdit
 }
 
 export function ItemSection() {
-  const { draft, addItem, setBillSubtotalCents, setBillSubtotalIssue } = useItemEditorModel();
+  const { draft, addItem, importReceipt, setBillSubtotalCents, setBillSubtotalIssue } = useItemEditorModel();
 
   const [newItem, setNewItem] = useState<ItemFormState>({
     name: "",
@@ -357,10 +358,19 @@ export function ItemSection() {
               </div>
             </div>
 
-            <Button type="submit" size="sm" className="w-full sm:w-auto">
-              <Plus className="h-4 w-4" />
-              Add item
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="submit" size="sm" className="w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                Add item
+              </Button>
+              <ReceiptScanner
+                participants={draft.participants}
+                hasExistingReceiptData={
+                  draft.items.length > 0 || draft.taxCents > 0 || draft.tipCents > 0
+                }
+                onImport={importReceipt}
+              />
+            </div>
           </form>
         )}
 

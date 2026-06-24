@@ -20,7 +20,7 @@ import { ItemSection } from "@/components/split/ItemSection";
 import { ParticipantSection } from "@/components/split/ParticipantSection";
 import { MobileSummaryDock, SummarySection } from "@/components/split/SummarySection";
 import { useAppStore } from "@/store/useAppStore";
-import { useDraftSummaryModel, useSplitHeaderModel } from "@/store/splitEditorModel";
+import { useDraftSummaryModel, useSplitHeaderModel } from "@/store/useSplitEditor";
 import type { SplitMode } from "@/types/split";
 
 function formatDraftSavedAt(isoDate: string) {

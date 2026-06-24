@@ -67,13 +67,14 @@
 
 ReceiptSplitter is a web-only utility for a payer who needs to split a receipt across several participants. It keeps the flow small and fast: add people, enter bill items, assign each item, apply tax and tip, then save a local summary of who owes the payer.
 
-The app is local-first and stores drafts and saved splits in browser local storage. It does not use authentication, backend APIs, databases, payment integrations, syncing, or receipt scanning.
+The app is local-first and stores drafts and saved splits in browser local storage. It does not use authentication, backend APIs, databases, payment integrations, syncing, or cloud OCR.
 
 Key features:
 
 * Add, edit, and remove participants.
 * Choose the payer for the bill.
 * Split by assigned receipt items or split the whole bill equally.
+* Scan English receipt images locally in the browser, then review and assign detected items.
 * Allocate tax and tip equally or proportionally by item subtotal.
 * Save split snapshots locally and reopen them later.
 * Mark owed participants as paid on saved split summaries.
@@ -152,11 +153,14 @@ No API keys or environment variables are required for local use.
 2. Add participants and select the payer.
 3. Choose itemized mode or whole-bill equal mode.
 4. In itemized mode, add items with amounts and assign each item to one or more participants.
-5. Add tax and tip, then choose equal or proportional allocation.
-6. Review the live summary and save the split.
-7. Open a saved split to view totals, copy the payment summary, or mark repayments as paid.
+5. Optionally scan a JPEG, PNG, or WebP receipt, review every detected field, and choose whether to append or replace existing receipt data.
+6. Add tax and tip, then choose equal or proportional allocation.
+7. Review the live summary and save the split.
+8. Open a saved split to view totals, copy the payment summary, or mark repayments as paid.
 
 Drafts and saved split history persist in browser local storage, so they survive refreshes and browser restarts on the same device and browser profile.
+
+Receipt images, raw OCR text, and unconfirmed scan results are not persisted or uploaded. The first scan may download the Tesseract.js worker and English language assets.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -181,6 +185,7 @@ Drafts and saved split history persist in browser local storage, so they survive
 ```text
 src/
   components/       Reusable UI and split editor sections
+  features/         Cohesive optional capabilities such as receipt scanning
   routes/           TanStack Router page components
   store/            Zustand persisted app state
   types/            Split and calculation types
@@ -208,6 +213,7 @@ Current project focus:
 * [x] Equal and proportional tip allocation
 * [x] Payment summary copy action
 * [x] Repayment status tracking
+* [x] Browser-only English receipt scanning
 
 See the [open issues](https://github.com/peijie36/ReceiptSplitter/issues) for proposed features and known issues.
 
@@ -218,7 +224,7 @@ See the [open issues](https://github.com/peijie36/ReceiptSplitter/issues) for pr
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions should keep the app small, local-first, and web-only. Avoid adding backend services, authentication, syncing, payment integrations, receipt scanning, or other features outside the payer-focused receipt splitting flow.
+Contributions should keep the app small, local-first, and web-only. Avoid adding backend services, authentication, syncing, payment integrations, cloud OCR, receipt-image uploads, or other features outside the payer-focused receipt splitting flow.
 
 1. Fork the project.
 2. Create your feature branch.

@@ -320,4 +320,100 @@ describe("useAppStore", () => {
       error: "Tip must be a whole number of cents.",
     });
   });
+
+  it("replaces existing receipt data atomically", () => {
+    const store = useAppStore.getState();
+    store.addParticipant("Alex");
+    const participantId = useAppStore.getState().draft.participants[0].id;
+    store.addItem({
+      name: "Old item",
+      amountCents: 500,
+      participantIds: [participantId],
+    });
+    store.setTaxCents(50);
+    store.setTipCents(100);
+
+    const result = useAppStore.getState().importReceipt({
+      items: [
+        {
+          name: "Scanned item",
+          amountCents: 1250,
+          participantIds: [participantId],
+        },
+      ],
+      taxCents: 110,
+      tipCents: 200,
+      strategy: "replace",
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(useAppStore.getState().draft.items).toEqual([
+      expect.objectContaining({
+        name: "Scanned item",
+        amountCents: 1250,
+        participantIds: [participantId],
+      }),
+    ]);
+    expect(useAppStore.getState().draft.items[0].id).toEqual(expect.any(String));
+    expect(useAppStore.getState().draft.taxCents).toBe(110);
+    expect(useAppStore.getState().draft.tipCents).toBe(200);
+  });
+
+  it("appends scanned items and adds scanned charges", () => {
+    const store = useAppStore.getState();
+    store.addParticipant("Alex");
+    const participantId = useAppStore.getState().draft.participants[0].id;
+    store.addItem({
+      name: "Existing item",
+      amountCents: 500,
+      participantIds: [participantId],
+    });
+    store.setTaxCents(50);
+    store.setTipCents(100);
+
+    expect(
+      useAppStore.getState().importReceipt({
+        items: [
+          {
+            name: "Scanned item",
+            amountCents: 1250,
+            participantIds: [participantId],
+          },
+        ],
+        taxCents: 110,
+        tipCents: 200,
+        strategy: "append",
+      }),
+    ).toEqual({ ok: true });
+
+    expect(useAppStore.getState().draft.items.map((item) => item.name)).toEqual([
+      "Existing item",
+      "Scanned item",
+    ]);
+    expect(useAppStore.getState().draft.taxCents).toBe(160);
+    expect(useAppStore.getState().draft.tipCents).toBe(300);
+  });
+
+  it("leaves the draft unchanged when a receipt import is invalid", () => {
+    const store = useAppStore.getState();
+    store.addParticipant("Alex");
+    const participantId = useAppStore.getState().draft.participants[0].id;
+    const draftBeforeImport = useAppStore.getState().draft;
+
+    const result = useAppStore.getState().importReceipt({
+      items: [
+        {
+          name: "",
+          amountCents: 1250,
+          participantIds: [participantId],
+        },
+      ],
+      taxCents: 100,
+      tipCents: 200,
+      strategy: "replace",
+    });
+
+    expect(result).toEqual({ ok: false, error: "Item name is required." });
+    expect(useAppStore.getState().draft).toBe(draftBeforeImport);
+  });
 });

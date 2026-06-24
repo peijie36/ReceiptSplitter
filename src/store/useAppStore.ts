@@ -33,6 +33,13 @@ type ItemInput = {
   participantIds: string[];
 };
 
+type ReceiptImportInput = {
+  items: ItemInput[];
+  taxCents: number;
+  tipCents: number;
+  strategy: "replace" | "append";
+};
+
 type AppStore = {
   draft: DraftSplit;
   savedSplits: SavedSplit[];
@@ -46,6 +53,7 @@ type AppStore = {
   addItem: (input: ItemInput) => ActionResult;
   updateItem: (itemId: string, input: ItemInput) => ActionResult;
   removeItem: (itemId: string) => void;
+  importReceipt: (input: ReceiptImportInput) => ActionResult;
   setBillSubtotalCents: (billSubtotalCents: number) => ActionResult;
   setTaxCents: (taxCents: number) => ActionResult;
   setTipCents: (tipCents: number) => ActionResult;
@@ -258,6 +266,53 @@ export const useAppStore = create<AppStore>()(
             items: state.draft.items.filter((item) => item.id !== itemId),
           }),
         }));
+      },
+      importReceipt: (input) => {
+        const draft = get().draft;
+
+        for (const item of input.items) {
+          const error = validateItemInput(item, draft.participants);
+
+          if (error) {
+            return failure(error);
+          }
+        }
+
+        const nextTaxCents =
+          input.strategy === "append" ? draft.taxCents + input.taxCents : input.taxCents;
+        const nextTipCents =
+          input.strategy === "append" ? draft.tipCents + input.tipCents : input.tipCents;
+        const taxError = validateCentAmount(nextTaxCents, "Tax");
+        const tipError = validateCentAmount(nextTipCents, "Tip");
+
+        if (taxError) {
+          return failure(taxError);
+        }
+
+        if (tipError) {
+          return failure(tipError);
+        }
+
+        const importedItems: Item[] = input.items.map((item) => ({
+          id: createId(),
+          name: normalizeName(item.name),
+          amountCents: item.amountCents,
+          participantIds: [...item.participantIds],
+        }));
+
+        set((state) => ({
+          draft: touchDraft({
+            ...state.draft,
+            items:
+              input.strategy === "append"
+                ? [...state.draft.items, ...importedItems]
+                : importedItems,
+            taxCents: nextTaxCents,
+            tipCents: nextTipCents,
+          }),
+        }));
+
+        return success();
       },
       setBillSubtotalCents: (billSubtotalCents) => {
         const error = validateCentAmount(billSubtotalCents, "Subtotal");

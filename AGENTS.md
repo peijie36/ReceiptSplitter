@@ -22,12 +22,15 @@ Do **not** add:
 - syncing
 - payment integrations
 - notifications
-- OCR / receipt scanning
+- cloud OCR or receipt-image uploads
 - chat / social features
 - multi-user collaboration
 - monetization features
 
 Keep the app small, fast, and easy to maintain.
+
+Browser-only English receipt scanning is allowed as assisted data entry. Receipt images,
+raw OCR text, and unconfirmed scan results must remain in memory and must not be persisted.
 
 ## Tech Stack
 
@@ -59,6 +62,7 @@ Prefer a structure close to:
 ```text
 src/
   components/
+  features/
   routes/
   store/
   types/
@@ -67,6 +71,11 @@ src/
   main.tsx
   router.tsx
 ```
+
+Keep cohesive optional capabilities under `features/`. Browser-only receipt scanning owns
+its UI, parsing, image preparation, OCR adapter, orchestration, types, and tests under
+`src/features/receipt-scanning/`. Shared split calculations and draft persistence remain
+outside the feature module.
 
 Routes:
 

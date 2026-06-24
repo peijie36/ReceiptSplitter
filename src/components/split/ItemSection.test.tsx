@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { ItemSection } from "@/components/split/ItemSection";
@@ -109,5 +109,24 @@ describe("ItemSection", () => {
 
     expect(screen.getByRole("button", { name: "Assign Alex" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "Assign Blair" })).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("offers receipt scanning only for itemized splits with participants", () => {
+    const store = useAppStore.getState();
+    render(<ItemSection />);
+
+    expect(screen.queryByRole("button", { name: "Scan receipt" })).not.toBeInTheDocument();
+
+    act(() => {
+      store.addParticipant("Alex");
+    });
+
+    expect(screen.getByRole("button", { name: "Scan receipt" })).toBeInTheDocument();
+
+    act(() => {
+      store.setSplitMode("equal");
+    });
+
+    expect(screen.queryByRole("button", { name: "Scan receipt" })).not.toBeInTheDocument();
   });
 });

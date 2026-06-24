@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { MoneyInput } from "@/components/ui/money-input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useChargeEditorModel } from "@/store/splitEditorModel";
+import { useChargeEditorModel } from "@/store/useSplitEditor";
 import type { AllocationMode } from "@/types/split";
 import { cn } from "@/lib/utils";
 import { formatMoneyInput } from "@/utils/money";
